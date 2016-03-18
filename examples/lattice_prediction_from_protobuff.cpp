@@ -2,10 +2,11 @@
 #include <fstream>
 #include <gflags/gflags.h>
 #include <iterator>
+#include <dali/core.h>
+#include <dali/utils.h>
+#include <dali/models/StackedGatedModel.h>
 
-#include "dali/core.h"
-#include "dali/utils.h"
-#include "dali/models/StackedGatedModel.h"
+#include "utils.h"
 
 DEFINE_string(index2target, "", "Location of Index2Target file with mapping from integer to target name.");
 DEFINE_string(lattice, utils::dir_join({ STR(DALI_DATA_DIR), "mini_wiki.txt"}), "Where to load a lattice / Ontology from ?");

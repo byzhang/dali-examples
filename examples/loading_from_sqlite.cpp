@@ -3,7 +3,9 @@
 #include <string>
 #include <vector>
 #include <sstream>
-#include "dali/utils.h"
+#include <dali/utils.h>
+
+#include "utils.h"
 #include "SQLiteCpp/Database.h"
 
 DEFINE_string(index2target, "", "Location of Index2target file with mapping from integer to target name.");

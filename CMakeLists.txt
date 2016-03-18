@@ -3,6 +3,9 @@ set(CMAKE_LEGACY_CYGWIN_WIN32 0)
 
 project("dali-examples")
 
+
+
+
 # additional cmake find files
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
@@ -10,55 +13,23 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 # on installed version (google:: VS gflags::)
 find_package(Gflags REQUIRED)
 add_definitions(-DGFLAGS_NAMESPACE=${GFLAGS_NAMESPACE})
-
-
-
-
-
-
-
-
-
-
-
-
-
-# CUDA BEGINS HERE
-if (DEFINED WITH_CUDA)
-    message("WITH_CUDA ${WITH_CUDA}")
-else()
-    if (CUDA_FOUND STREQUAL TRUE)
-        SET(WITH_CUDA TRUE)
-    else()
-        SET(WITH_CUDA FALSE)
-        message("CUDA not found - did you know that Dali has GPU support?")
-    endif()
-endif(DEFINED WITH_CUDA)
-
-if (WITH_CUDA)
-	set(DALI_BINARY_DIR $ENV{DALI_HOME}/build)
-else()
-	set(DALI_BINARY_DIR $ENV{DALI_HOME}/build_cpu)
-	add_definitions(-DMSHADOW_USE_CUDA=0)
-endif(WITH_CUDA)
-
-add_subdirectory($ENV{DALI_HOME} ${DALI_BINARY_DIR})
-
-include_directories($ENV{DALI_HOME})
-include_directories($ENV{DALI_HOME}/dali)
 include_directories(${GFLAGS_INCLUDE_DIRS})
-add_definitions(-DMSHADOW_USE_CBLAS)
-add_definitions(-DMSHADOW_USE_MKL=0)
-INCLUDE_DIRECTORIES($ENV{DALI_HOME}/third_party/mshadow)
-include_directories($ENV{DALI_HOME}/third_party/SQLiteCpp/include)
-include_directories($ENV{DALI_HOME}/third_party/json11)
-include_directories($ENV{DALI_HOME}/third_party/libcuckoo/src)
-include_directories($ENV{DALI_HOME}/third_party/sole)
-include_directories($ENV{DALI_HOME}/third_party/redox/include)
+
+find_package(CUDA)
+include_directories(${CUDA_INCLUDE_DIRS})
+
+add_subdirectory(${PROJECT_SOURCE_DIR}/protobuf)
+include_directories(${PROJECT_SOURCE_DIR})
+
+add_subdirectory(${PROJECT_SOURCE_DIR}/third_party/SQLiteCpp)
+include_directories(${PROJECT_SOURCE_DIR}/third_party/SQLiteCpp/include)
+
+
+
 
 # ensure we are using C++11
 # -stdlib=libc++
-SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} --std=c++11 -O3 -g" )
+SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} --std=c++11 -O3 -g -fPIC" )
 
 
 
@@ -96,9 +67,25 @@ set(EXAMPLE_PROGRAMS api_showcase
                      visualizer
                      )
 
+
+add_library(utils examples/utils.cpp examples/utils.h)
+target_link_libraries(utils SQLiteCpp sqlite3 proto ${CMAKE_DL_LIBS})
+
+
+
+#################### CONVERT ME TO FINDDALI.cmake #############################
+# also create DALI_INCLUDES variable
+find_package(ZLIB REQUIRED)
+find_library(DALI_CORE_LIBRARIES dali)
+find_library(DALI_GPU_LIBRARIES dali_cuda)
+LIST(APPEND DALI_LIBRARIES ${DALI_CORE_LIBRARIES})
+LIST(APPEND DALI_LIBRARIES ${DALI_GPU_LIBRARIES})
+###############################################################################
+
+
 foreach(program ${EXAMPLE_PROGRAMS})
     add_executable(${program} ${EXAMPLES_DIR}/${program}.cpp)
-    target_link_libraries(${program} dali)
+    target_link_libraries(${program} ${DALI_LIBRARIES} ${GFLAGS_LIBRARIES} ${ZLIB_LIBRARIES} utils)
     if (MKL_FOUND AND BLAS_FOUND)
         add_custom_command(TARGET ${program}
             COMMAND sh ${PROJECT_SOURCE_DIR}/scripts/fix_dylib.sh ${EXAMPLES_BUILD_DIR}/${program}
