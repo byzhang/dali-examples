@@ -51,7 +51,7 @@ if(DALI_CORE_LIBRARIES)
         ENDIF (DALI_CUDA_LIBRARIES)
 
         # BLAS not found:
-        list(APPEND DALI_LIBRARIES openblas)
+        list(APPEND DALI_LIBRARIES ${BLAS_LIBRARIES})
     ENDIF (APPLE)
 
 else(DALI_CORE_LIBRARIES)
