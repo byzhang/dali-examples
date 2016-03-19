@@ -1,7 +1,9 @@
-#include "dali/core.h"
-#include "dali/utils.h"
-#include "dali/data_processing/Arithmetic.h"
-#include "dali/visualizer/visualizer.h"
+#include <dali/core.h>
+#include <dali/utils.h>
+#include <dali/data_processing/Arithmetic.h>
+#include <dali_visualizer/visualizer.h>
+
+#include "utils.h"
 
 using arithmetic::numeric_example_t;
 using std::chrono::seconds;
@@ -15,6 +17,7 @@ using std::tuple;
 using std::vector;
 using utils::assert2;
 using utils::MS;
+using namespace dali::visualizer;
 
 
 typedef float REAL_t;
@@ -618,9 +621,7 @@ template class ArithmeticModel<double>;
 
 typedef ArithmeticModel<REAL_t> model_t;
 
-shared_ptr<visualizable::Tree> visualize_derivation(vector<uint> derivation, vector<string> words) {
-    using visualizable::Tree;
-
+shared_ptr<Tree> visualize_derivation(vector<uint> derivation, vector<string> words) {
     vector<shared_ptr<Tree>> result;
     std::transform(words.begin(), words.end(), std::back_inserter(result),
             [](const string& a) {
@@ -719,7 +720,7 @@ void training_loop(std::shared_ptr<Solver::AbstractSolver<REAL_t>> solver,
                     prediction_string.push_back(joined_digits);
                     std::cout << joined_digits << utils::reset_color << std::endl;
                 }
-                auto vgrid = make_shared<visualizable::GridLayout>();
+                auto vgrid = make_shared<GridLayout>();
 
                 assert2(predictions[0].derivations.size() == predictions[0].nodes.size(),
                         "Szymon messed up.");
@@ -731,11 +732,11 @@ void training_loop(std::shared_ptr<Solver::AbstractSolver<REAL_t>> solver,
                             vocab.decode(&expression)
                     );
                     auto tree_prob = predictions[0].nodes[didx].log_probability.exp().w(0,0);
-                    vgrid->add_in_column(0, make_shared<visualizable::Probability<double>>(tree_prob));
+                    vgrid->add_in_column(0, make_shared<Probability<double>>(tree_prob));
                     vgrid->add_in_column(0, visualization);
                 }
-                vgrid->add_in_column(1, make_shared<visualizable::Sentence<double>>(expression_string));
-                vgrid->add_in_column(1, make_shared<visualizable::FiniteDistribution<double>>(
+                vgrid->add_in_column(1, make_shared<Sentence<double>>(expression_string));
+                vgrid->add_in_column(1, make_shared<FiniteDistribution<double>>(
                     prediction_probability,
                     prediction_string
                 ));
@@ -809,7 +810,7 @@ int main (int argc,  char* argv[]) {
     auto solver = Solver::construct(FLAGS_solver, params, (REAL_t) FLAGS_learning_rate, (REAL_t) FLAGS_reg);
 
     if (!FLAGS_visualizer.empty())
-        visualizer = make_shared<Visualizer>(FLAGS_visualizer);
+        visualizer = make_shared<Visualizer>(FLAGS_visualizer, FLAGS_visualizer_hostname, FLAGS_visualizer_port);
 
     std::cout << "     Vocabulary size : " << arithmetic::vocabulary.size() << std::endl
               << "      minibatch size : " << FLAGS_minibatch << std::endl

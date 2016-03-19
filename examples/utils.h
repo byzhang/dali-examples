@@ -9,6 +9,9 @@
 #include "SQLiteCpp/Database.h"
 #include "protobuf/corpus.pb.h"
 
+DECLARE_string(visualizer_hostname);
+DECLARE_int32(visualizer_port);
+DECLARE_string(visualizer);
 
 namespace utils {
     template<typename T>

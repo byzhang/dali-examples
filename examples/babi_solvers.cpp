@@ -5,12 +5,14 @@
 #include <vector>
 #include <json11.hpp>
 #include <gflags/gflags.h>
-#include "dali/data_processing/babi.h"
-#include "dali/core.h"
-#include "dali/utils.h"
-#include "dali/execution/BeamSearch.h"
-#include "dali/visualizer/visualizer.h"
 
+#include <dali/data_processing/babi.h>
+#include <dali/core.h>
+#include <dali/utils.h>
+#include <dali/execution/BeamSearch.h>
+#include <dali_visualizer/visualizer.h>
+
+#include "utils.h"
 using namespace std::placeholders;
 
 using beam_search::BeamSearchResult;
@@ -31,6 +33,7 @@ using utils::MS;
 using utils::reversed;
 using utils::Timer;
 using utils::Vocab;
+using namespace dali::visualizer;
 
 DEFINE_int32(j,                        1,      "Number of threads");
 DEFINE_int32(minibatch,                25,     "How many stories to put in a single batch.");
@@ -431,7 +434,7 @@ class LstmBabiModel {
             auto activation = activate_story(facts, question, false);
             auto beam_search_results = my_beam_search(activation);
 
-            shared_ptr<visualizable::FiniteDistribution<T>> vdistribution;
+            shared_ptr<FiniteDistribution<T>> vdistribution;
             std::vector<REAL_t> scores_as_vec;
             std::vector<string> beam_search_results_solutions;
             for (auto& result: beam_search_results) {
@@ -442,13 +445,13 @@ class LstmBabiModel {
             }
             auto distribution_as_vec =
                     FLAGS_margin_loss ? utils::normalize_weights(scores_as_vec) : scores_as_vec;
-            vdistribution = make_shared<visualizable::FiniteDistribution<T>>(
+            vdistribution = make_shared<FiniteDistribution<T>>(
                     distribution_as_vec, scores_as_vec, beam_search_results_solutions, 5);
 
             vector<REAL_t> facts_weights;
-            vector<std::shared_ptr<visualizable::Sentence<T>>> facts_sentences;
+            vector<std::shared_ptr<Sentence<T>>> facts_sentences;
             for (int fidx=0; fidx < facts.size(); ++fidx) {
-                auto vfact = make_shared<visualizable::Sentence<T>>(facts[fidx]);
+                auto vfact = make_shared<Sentence<T>>(facts[fidx]);
 
                 vector<REAL_t> words_weights;
 
@@ -460,14 +463,14 @@ class LstmBabiModel {
                 facts_weights.push_back(activation.fact_gate_memory[fidx].w(0,0));
             }
 
-            auto vcontext = make_shared<visualizable::Sentences<T>>(facts_sentences);
+            auto vcontext = make_shared<Sentences<T>>(facts_sentences);
             vcontext->set_weights(facts_weights);
-            auto vquestion = make_shared<visualizable::Sentence<T>>(question);
-            auto vanswer = make_shared<visualizable::Sentence<T>>(correct_answer);
+            auto vquestion = make_shared<Sentence<T>>(question);
+            auto vanswer = make_shared<Sentence<T>>(correct_answer);
 
-            auto vqa = make_shared<visualizable::QA<T>>(vcontext, vquestion, vanswer);
+            auto vqa = make_shared<QA<T>>(vcontext, vquestion, vanswer);
 
-            auto vgrid = make_shared<visualizable::GridLayout>();
+            auto vgrid = make_shared<GridLayout>();
             vgrid->add_in_column(0, vqa);
             vgrid->add_in_column(1, vdistribution);
 
@@ -662,7 +665,7 @@ int main(int argc, char** argv) {
 
     int increment = 0;
     if (!FLAGS_visualizer.empty())
-        visualizer = make_shared<Visualizer>(FLAGS_visualizer);
+        visualizer = make_shared<Visualizer>(FLAGS_visualizer, FLAGS_visualizer_hostname, FLAGS_visualizer_port);
 
     std::cout << "Number of threads: " << FLAGS_j << std::endl;
     std::cout << "Using " << (FLAGS_margin_loss ? "margin loss" : "cross entropy") << std::endl;

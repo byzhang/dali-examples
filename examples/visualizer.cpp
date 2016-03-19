@@ -5,9 +5,10 @@
 #include <json11.hpp>
 #include <sole.hpp>
 
-#include "dali/visualizer/visualizer.h"
+#include "dali_visualizer/visualizer.h"
 
 using json11::Json;
+using namespace dali::visualizer;
 
 int main(int argc, char* argv[]) {
     Visualizer v("vis_demo");

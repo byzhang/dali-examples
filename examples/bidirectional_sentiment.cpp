@@ -7,16 +7,18 @@
 #include <fstream>
 #include <ostream>
 
-#include "dali/core.h"
-#include "dali/utils.h"
-#include "dali/utils/stacked_model_builder.h"
-#include "dali/utils/NlpUtils.h"
-#include "dali/data_processing/SST.h"
-#include "dali/data_processing/Glove.h"
-#include "dali/models/StackedModel.h"
-#include "dali/models/StackedGatedModel.h"
-#include "dali/visualizer/visualizer.h"
-#include "dali/tensor/__MatMacros__.h"
+#include <dali/core.h>
+#include <dali/utils.h>
+#include <dali/utils/stacked_model_builder.h>
+#include <dali/utils/NlpUtils.h>
+#include <dali/data_processing/SST.h>
+#include <dali/data_processing/Glove.h>
+#include <dali/models/StackedModel.h>
+#include <dali/models/StackedGatedModel.h>
+#include <dali_visualizer/visualizer.h>
+#include <dali/tensor/__MatMacros__.h>
+
+#include "utils.h"
 
 using std::vector;
 using std::make_shared;
@@ -35,6 +37,7 @@ using SST::SentimentBatch;
 using utils::assert2;
 using json11::Json;
 using std::to_string;
+using namespace dali::visualizer;
 
 typedef float REAL_t;
 DEFINE_string(results_file,            "",         "Where to save test performance.");
@@ -529,7 +532,7 @@ int main (int argc,  char* argv[]) {
 
     shared_ptr<Visualizer> visualizer;
     if (!FLAGS_visualizer.empty())
-        visualizer = make_shared<Visualizer>(FLAGS_visualizer);
+        visualizer = make_shared<Visualizer>(FLAGS_visualizer, FLAGS_visualizer_hostname, FLAGS_visualizer_port);
 
     while (patience < FLAGS_patience && epoch < epochs) {
 
@@ -600,10 +603,11 @@ int main (int argc,  char* argv[]) {
                             graph::NoBackprop nb;
                             // make prediction
                             auto model_out = thread_model.activate_sequence(&example, 0.0);
-                            return SST::json_classification(
+                            return json_classification(
                                 word_vocab.decode(&example),
                                 std::get<1>(model_out),
-                                std::get<0>(model_out)
+                                std::get<0>(model_out),
+                                SST::label_names
                             );
                         }
                     );

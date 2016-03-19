@@ -6,14 +6,16 @@
 #include <iterator>
 #include <chrono>
 
-#include "dali/core.h"
-#include "dali/utils.h"
-#include "dali/utils/stacked_model_builder.h"
-#include "dali/utils/NlpUtils.h"
-#include "dali/data_processing/NER.h"
-#include "dali/data_processing/Glove.h"
-#include "dali/models/StackedGatedModel.h"
-#include "dali/visualizer/visualizer.h"
+#include <dali/core.h>
+#include <dali/utils.h>
+#include <dali/utils/stacked_model_builder.h>
+#include <dali/utils/NlpUtils.h>
+#include <dali/data_processing/NER.h>
+#include <dali/data_processing/Glove.h>
+#include <dali/models/StackedGatedModel.h>
+#include <dali_visualizer/visualizer.h>
+
+#include "utils.h"
 
 using std::atomic;
 using std::chrono::seconds;
@@ -27,6 +29,7 @@ using std::ofstream;
 using std::min;
 using utils::Vocab;
 using utils::assert2;
+using namespace dali::visualizer;
 
 typedef double REAL_t;
 
@@ -166,7 +169,7 @@ int main (int argc,  char* argv[]) {
 
     shared_ptr<Visualizer> visualizer;
     if (!FLAGS_visualizer.empty())
-        visualizer = make_shared<Visualizer>(FLAGS_visualizer);
+        visualizer = make_shared<Visualizer>(FLAGS_visualizer, FLAGS_visualizer_hostname, FLAGS_visualizer_port);
 
     auto pred_fun = [&model](vector<uint>& example) {
         graph::NoBackprop nb;
@@ -280,7 +283,7 @@ int main (int argc,  char* argv[]) {
                             prediction.emplace_back(probs.argmax());
                         }
 
-                        auto input_sentence = make_shared<visualizable::Sentence<REAL_t>>(word_vocab.decode(&example));
+                        auto input_sentence = make_shared<Sentence<REAL_t>>(word_vocab.decode(&example));
                         input_sentence->set_weights(MatOps<REAL_t>::hstack(memories));
                         auto decoded = label_vocab.decode(&prediction);
                         for (auto it_decoded = decoded.begin(); it_decoded < decoded.end(); it_decoded++) {
@@ -289,9 +292,9 @@ int main (int argc,  char* argv[]) {
                             }
                         }
 
-                        auto psentence = visualizable::ParallelSentence<REAL_t>(
+                        auto psentence = ParallelSentence<REAL_t>(
                             input_sentence,
-                            make_shared<visualizable::Sentence<REAL_t>>(decoded)
+                            make_shared<Sentence<REAL_t>>(decoded)
                         );
                         return psentence.to_json();
                     });

@@ -6,13 +6,16 @@
 #include <iterator>
 #include <chrono>
 
-#include "dali/core.h"
-#include "dali/utils.h"
-#include "dali/utils/NlpUtils.h"
-#include "dali/utils/stacked_model_builder.h"
-#include "dali/data_processing/SST.h"
-#include "dali/data_processing/Glove.h"
-#include "dali/models/StackedModel.h"
+#include <dali/core.h>
+#include <dali/utils.h>
+#include <dali/utils/NlpUtils.h>
+#include <dali/utils/stacked_model_builder.h>
+#include <dali/data_processing/SST.h>
+#include <dali/data_processing/Glove.h>
+#include <dali/models/StackedModel.h>
+#include <dali_visualizer/visualizer.h>
+
+#include "utils.h"
 
 using std::atomic;
 using std::chrono::seconds;
@@ -26,6 +29,7 @@ using std::ofstream;
 using std::min;
 using utils::Vocab;
 using utils::assert2;
+using namespace dali::visualizer;
 
 typedef float REAL_t;
 typedef Mat<REAL_t> mat;
@@ -156,7 +160,7 @@ int main (int argc,  char* argv[]) {
 
     shared_ptr<Visualizer> visualizer;
     if (!FLAGS_visualizer.empty())
-        visualizer = make_shared<Visualizer>(FLAGS_visualizer);
+        visualizer = make_shared<Visualizer>(FLAGS_visualizer, FLAGS_visualizer_hostname, FLAGS_visualizer_port);
 
     auto pred_fun = [&model](vector<uint>& example) {
         graph::NoBackprop nb;
@@ -223,9 +227,10 @@ int main (int argc,  char* argv[]) {
                                     0.0
                                 )
                             );
-                            return SST::json_classification(
+                            return json_classification(
                                 word_vocab.decode(&example),
-                                probs
+                                probs,
+                                SST::label_names
                             );
                         }
                     );

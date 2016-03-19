@@ -8,16 +8,19 @@
 #include <mutex>
 #include <thread>
 
-#include "dali/data_processing/Batch.h"
-#include "dali/core.h"
-#include "dali/utils.h"
-#include "dali/utils/NlpUtils.h"
-#include "dali/utils/stacked_model_builder.h"
-#include "dali/models/StackedModel.h"
-#include "dali/visualizer/visualizer.h"
+#include <dali/data_processing/Batch.h>
+#include <dali/config.h>
+#include <dali/core.h>
+#include <dali/utils.h>
+#include <dali/utils/NlpUtils.h>
+#include <dali/utils/stacked_model_builder.h>
+#include <dali/models/StackedModel.h>
+#include <dali_visualizer/visualizer.h>
 #ifdef DALI_USE_CUDA
-    #include "dali/utils/gpu_utils.h"
+    #include <dali/utils/gpu_utils.h>
 #endif
+
+#include "utils.h"
 
 DEFINE_int32(minibatch,            100,  "What size should be used for the minibatches ?");
 DEFINE_bool(sparse,                true, "Use sparse embedding");
@@ -49,6 +52,7 @@ using utils::Vocab;
 using utils::Timer;
 using std::tuple;
 using std::chrono::seconds;
+using namespace dali::visualizer;
 
 typedef float REAL_t;
 typedef Mat<REAL_t> mat;
@@ -289,7 +293,7 @@ int main( int argc, char* argv[]) {
 
     if (!FLAGS_visualizer.empty()) {
         try {
-            visualizer = make_shared<Visualizer>(FLAGS_visualizer);
+            visualizer = make_shared<Visualizer>(FLAGS_visualizer, FLAGS_visualizer_hostname, FLAGS_visualizer_port);
         } catch (std::runtime_error e) {
             std::cout << e.what() << std::endl; // could not connect to redis.
         }
@@ -400,12 +404,12 @@ int main( int argc, char* argv[]) {
                                 probs.emplace_back(beam.score);
                             }
 
-                            auto input_sentence = make_shared<visualizable::Sentence<REAL_t>>(
+                            auto input_sentence = make_shared<Sentence<REAL_t>>(
                                     word_vocab.decode(&priming_no_start));
-                            auto sentences_viz = make_shared<visualizable::Sentences<REAL_t>>(sentences);
+                            auto sentences_viz = make_shared<Sentences<REAL_t>>(sentences);
                             sentences_viz->set_weights(probs);
 
-                            auto input_output_pair = visualizable::GridLayout();
+                            auto input_output_pair = GridLayout();
 
                             input_output_pair.add_in_column(0, input_sentence);
                             input_output_pair.add_in_column(1, sentences_viz);
@@ -437,14 +441,6 @@ int main( int argc, char* argv[]) {
         maybe_save_model(&model);
 
         Timer::report();
-
-
-        ELOG(memory_bank<REAL_t>::num_cpu_allocations);
-        ELOG(memory_bank<REAL_t>::total_cpu_memory);
-        #ifdef DALI_USE_CUDA
-            ELOG(memory_bank<REAL_t>::num_gpu_allocations);
-            ELOG(memory_bank<REAL_t>::total_gpu_memory);
-        #endif
 
         epoch++;
     }

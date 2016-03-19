@@ -1,5 +1,8 @@
 #include "utils.h"
 
+DEFINE_string(visualizer_hostname, "127.0.0.1", "Default hostname to be used by visualizer.");
+DEFINE_int32(visualizer_port,      6379,        "Default port to be used by visualizer.");
+DEFINE_string(visualizer,          "",          "What to name the visualization job.");
 
 using std::string;
 using std::stringstream;

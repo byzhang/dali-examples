@@ -6,13 +6,15 @@
 #include <iterator>
 #include <chrono>
 
-#include "dali/core.h"
-#include "dali/utils.h"
-#include "dali/utils/NlpUtils.h"
-#include "dali/data_processing/Paraphrase.h"
-#include "dali/data_processing/Glove.h"
-#include "dali/visualizer/visualizer.h"
-#include "dali/models/RecurrentEmbeddingModel.h"
+#include <dali/core.h>
+#include <dali/utils.h>
+#include <dali/utils/NlpUtils.h>
+#include <dali/data_processing/Paraphrase.h>
+#include <dali/data_processing/Glove.h>
+#include <dali_visualizer/visualizer.h>
+#include <dali/models/RecurrentEmbeddingModel.h>
+
+#include "utils.h"
 
 using namespace std::placeholders;
 using std::atomic;
@@ -32,6 +34,7 @@ using utils::vsum;
 using utils::Vocab;
 using utils::CharacterVocab;
 using utils::MS;
+using namespace dali::visualizer;
 
 typedef double REAL_t;
 // training flags
@@ -472,7 +475,7 @@ int main (int argc,  char* argv[]) {
 
     shared_ptr<Visualizer> visualizer;
     if (!FLAGS_visualizer.empty())
-        visualizer = make_shared<Visualizer>(FLAGS_visualizer);
+        visualizer = make_shared<Visualizer>(FLAGS_visualizer, FLAGS_visualizer_hostname, FLAGS_visualizer_port);
 
     // if no training should occur then use the validation set
     // to see how good the loaded model is.
@@ -554,55 +557,35 @@ int main (int argc,  char* argv[]) {
                         auto example_id = utils::randint(0, minibatch.size()-1);
                         std::tie(sentence1, sentence2, true_score) = minibatch[example_id];
 
-                        if (FLAGS_show_similar) {
-                            auto& sampled_sentence = utils::randint(0, 1) > 0 ? sentence2 : sentence1;
-                            auto cosine_distance = [&thread_model](const std::vector<uint>& s1, const std::vector<uint>& s2) {
-                                    auto original_encoded = thread_model.encode_sentence(s1, 0.0);
-                                    auto other_encoded    = thread_model.encode_sentence(s2, 0.0);
-                                    return (double) thread_model.cosine_distance(
-                                        std::get<0>(original_encoded),
-                                        std::get<0>(other_encoded)
-                                    ).w(0,0);
-                            };
-                            if (FLAGS_use_characters) {
-                                return paraphrase::nearest_neighbors(
-                                    char_vocab, sampled_sentence, training_set, cosine_distance, FLAGS_number_of_comparisons
-                                );
-                            } else {
-                                return paraphrase::nearest_neighbors(
-                                    word_vocab, sampled_sentence, training_set, cosine_distance, FLAGS_number_of_comparisons
-                                );
-                            }
-                        } else {
-                            double predicted_score;
-                            vector<double> memory1, memory2;
-                            std::tie(predicted_score, memory1, memory2) =
-                                    thread_model.predict_with_memories(sentence1, sentence2);
 
-                            auto vs1  = make_shared<visualizable::Sentence<REAL_t>>(
-                                FLAGS_use_characters ? char_vocab.decode_characters(&sentence1) :
-                                                       word_vocab.decode(&sentence1));
-                            vs1->set_weights(memory1);
-                            vs1->spaces = !FLAGS_use_characters;
+                        double predicted_score;
+                        vector<double> memory1, memory2;
+                        std::tie(predicted_score, memory1, memory2) =
+                                thread_model.predict_with_memories(sentence1, sentence2);
 
-                            auto vs2  = make_shared<visualizable::Sentence<REAL_t>>(
-                                FLAGS_use_characters ? char_vocab.decode_characters(&sentence2) :
-                                                       word_vocab.decode(&sentence2));
-                            vs2->set_weights(memory2);
-                            vs2->spaces = !FLAGS_use_characters;
+                        auto vs1  = make_shared<Sentence<REAL_t>>(
+                            FLAGS_use_characters ? char_vocab.decode_characters(&sentence1) :
+                                                   word_vocab.decode(&sentence1));
+                        vs1->set_weights(memory1);
+                        vs1->spaces = !FLAGS_use_characters;
 
-                            auto msg1 = make_shared<visualizable::Message>(MS() << "Predicted similarity: " << predicted_score);
-                            auto msg2 = make_shared<visualizable::Message>(MS() << "True similarity: " << true_score);
+                        auto vs2  = make_shared<Sentence<REAL_t>>(
+                            FLAGS_use_characters ? char_vocab.decode_characters(&sentence2) :
+                                                   word_vocab.decode(&sentence2));
+                        vs2->set_weights(memory2);
+                        vs2->spaces = !FLAGS_use_characters;
 
-                            auto grid = make_shared<visualizable::GridLayout>();
+                        auto msg1 = make_shared<Message>(MS() << "Predicted similarity: " << predicted_score);
+                        auto msg2 = make_shared<Message>(MS() << "True similarity: " << true_score);
 
-                            grid->add_in_column(0, vs1);
-                            grid->add_in_column(0, vs2);
-                            grid->add_in_column(1, msg1);
-                            grid->add_in_column(1, msg2);
+                        auto grid = make_shared<GridLayout>();
 
-                            return grid->to_json();
-                        }
+                        grid->add_in_column(0, vs1);
+                        grid->add_in_column(0, vs2);
+                        grid->add_in_column(1, msg1);
+                        grid->add_in_column(1, msg2);
+
+                        return grid->to_json();
                     });
                 }
             });
