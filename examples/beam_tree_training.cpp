@@ -790,6 +790,7 @@ int main (int argc,  char* argv[]) {
     );
 
     GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
+    utils::update_device(FLAGS_device);
 
     auto model = model_t(
         FLAGS_input_size,

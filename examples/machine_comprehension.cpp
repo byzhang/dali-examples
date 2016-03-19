@@ -4,11 +4,13 @@
 #include <string>
 #include <functional>
 
-#include "dali/core.h"
-#include "dali/data_processing/machine_comprehension.h"
-#include "dali/data_processing/Glove.h"
-#include "dali/utils.h"
-#include "dali/models/QuestionAnswering.h"
+#include <dali/core.h>
+#include <dali/data_processing/machine_comprehension.h>
+#include <dali/data_processing/Glove.h>
+#include <dali/utils.h>
+#include <dali/models/QuestionAnswering.h>
+
+#include "utils.h"
 
 using mc::Section;
 using mc::Question;
@@ -91,6 +93,7 @@ int main(int argc, char** argv) {
     );
 
     GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
+    utils::update_device(FLAGS_device);
 
     init();
 

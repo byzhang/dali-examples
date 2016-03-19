@@ -2,11 +2,11 @@
 #include <iostream>
 #include <memory>
 
-#include "dali/layers/model.h"
-#include "dali/utils/configuration.h"
-#include "dali/utils/grid_search.h"
-#include "dali/utils/core_utils.h"
-#include "dali/utils/SaneCrashes.h"
+#include <dali/layers/model.h>
+#include <dali/utils/configuration.h>
+#include <dali/utils/grid_search.h>
+#include <dali/utils/core_utils.h>
+#include <dali/utils/SaneCrashes.h>
 
 using std::shared_ptr;
 using std::make_shared;

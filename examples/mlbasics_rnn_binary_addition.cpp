@@ -8,8 +8,10 @@
 #include <memory>
 #include <vector>
 
-#include "dali/core.h"
-#include "dali/utils.h"
+#include <dali/core.h>
+#include <dali/utils.h>
+
+#include "utils.h"
 
 typedef double R;
 
@@ -30,6 +32,7 @@ int main( int argc, char* argv[]) {
     "at their binary representations. At each time-step we input one bit of first number\n"
     "one bit of second number and we output one bit of the result.\n");
     GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
+    utils::update_device(FLAGS_device);
 
     Throttled throttled;
 

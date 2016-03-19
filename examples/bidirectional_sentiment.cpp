@@ -439,6 +439,7 @@ int main (int argc,  char* argv[]) {
         " @date March 13th 2015"
     );
     GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
+    utils::update_device(FLAGS_device);
 
     if (FLAGS_patience > 40) FLAGS_patience = 40;
 

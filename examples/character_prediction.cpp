@@ -6,9 +6,9 @@
 #include <random>
 #include <thread>
 
-#include "dali/core.h"
-#include "dali/models/StackedModel.h"
-#include "dali/utils/stacked_model_builder.h"
+#include <dali/core.h>
+#include <dali/models/StackedModel.h>
+#include <dali/utils/stacked_model_builder.h>
 
 auto default_paul_graham_location = utils::dir_join({ STR(DALI_DATA_DIR) , "paul_graham", "train.txt" });
 
@@ -121,89 +121,89 @@ Mat<T> cost_fun(
 
 
 int main (int argc, char *argv[]) {
-        // Do not sync with stdio when using C++
-        std::ios_base::sync_with_stdio(0);
+    // Do not sync with stdio when using C++
+    std::ios_base::sync_with_stdio(0);
 
-        auto model = StackedModel<REAL_t>(FLAGS_vocab_size,
-                                          FLAGS_input_size,
-                                          FLAGS_hidden_size,
-                                          FLAGS_stack_size,
-                                          FLAGS_vocab_size);
-        auto parameters = model.parameters();
-        /*
-            for (auto& param : parameters) {
-                    param->npy_load(stdin);
-            }
-        */
-        uint prepad = 0;
-        uint postpad = FLAGS_vocab_size-1;
-        uint vocab_size = FLAGS_vocab_size;
-        auto sentences = get_character_sequences(
-            FLAGS_train,
-            prepad,
-            postpad,
-            vocab_size
-        );
-        int train_size = (int)(sentences.size() * 0.9);
-        int valid_size = sentences.size() - train_size;
-        vector<vector<uint>> train_set(sentences.begin(), sentences.begin() + train_size);
-        vector<vector<uint>> valid_set(sentences.begin() + train_size, sentences.end());
-
-        static std::random_device rd;
-        static std::mt19937 seed(rd());
-        static std::uniform_int_distribution<> uniform(0, train_set.size() - 1);
-
-
-        // Main training loop:
-        REAL_t cost = 0.0;
-        vector<thread> ts;
-
-        int total_epochs = 0;
-
-        Solver::AdaDelta<REAL_t> solver(parameters);
-
-        for (int t=0; t<FLAGS_num_threads; ++t) {
-            ts.emplace_back([&](int thread_id) {
-                auto thread_model = model.shallow_copy();
-                auto thread_parameters = thread_model.parameters();
-                for (auto i = 0; i < FLAGS_epochs / FLAGS_num_threads / FLAGS_minibatch_size; ++i) {
-                    for (auto mb = 0; mb < FLAGS_minibatch_size; ++mb) {
-                        cost_fun(
-                            thread_model,            // what model should collect errors
-                            train_set[uniform(seed)] // the sequence to predict
-                        ).grad();
-                    }
-                    graph::backward(); // backpropagate
-
-                    // solve it.
-                    // RMS prop
-                    //solver.step(thread_parameters, 0.01, 0.0);
-                    // AdaDelta
-                    solver.step(thread_parameters);
-                    // SGD
-                    // solver.step(thread_parameters, 0.3/minibatch_size, 0.0);
-                    cost = validation_error(model, valid_set);
-
-                    std::cout << "epoch (" << total_epochs << ") perplexity = "
-                                                              << std::fixed
-                              << std::setw( 5 ) // keep 7 digits
-                              << std::setprecision( 3 ) // use 3 decimals
-                              << std::setfill( ' ' ) << cost << std::endl;
-
-                }
-            }, t);
-        }
-
-        for(auto& t: ts)
-            t.join();
-/*
+    auto model = StackedModel<REAL_t>(FLAGS_vocab_size,
+                                      FLAGS_input_size,
+                                      FLAGS_hidden_size,
+                                      FLAGS_stack_size,
+                                      FLAGS_vocab_size);
+    auto parameters = model.parameters();
+    /*
         for (auto& param : parameters) {
-                param->npy_save(stdout);
+                param->npy_load(stdin);
         }
-*/
-        // utils::save_matrices(parameters, "paul_graham_params");
+    */
+    uint prepad = 0;
+    uint postpad = FLAGS_vocab_size-1;
+    uint vocab_size = FLAGS_vocab_size;
+    auto sentences = get_character_sequences(
+        FLAGS_train,
+        prepad,
+        postpad,
+        vocab_size
+    );
+    int train_size = (int)(sentences.size() * 0.9);
+    int valid_size = sentences.size() - train_size;
+    vector<vector<uint>> train_set(sentences.begin(), sentences.begin() + train_size);
+    vector<vector<uint>> valid_set(sentences.begin() + train_size, sentences.end());
 
-        // outputs:
-        //> epoch (0) perplexity = -5.70376
-        //> epoch (100) perplexity = -2.54203
+    static std::random_device rd;
+    static std::mt19937 seed(rd());
+    static std::uniform_int_distribution<> uniform(0, train_set.size() - 1);
+
+
+    // Main training loop:
+    REAL_t cost = 0.0;
+    vector<thread> ts;
+
+    int total_epochs = 0;
+
+    Solver::AdaDelta<REAL_t> solver(parameters);
+
+    for (int t=0; t<FLAGS_num_threads; ++t) {
+        ts.emplace_back([&](int thread_id) {
+            auto thread_model = model.shallow_copy();
+            auto thread_parameters = thread_model.parameters();
+            for (auto i = 0; i < FLAGS_epochs / FLAGS_num_threads / FLAGS_minibatch_size; ++i) {
+                for (auto mb = 0; mb < FLAGS_minibatch_size; ++mb) {
+                    cost_fun(
+                        thread_model,            // what model should collect errors
+                        train_set[uniform(seed)] // the sequence to predict
+                    ).grad();
+                }
+                graph::backward(); // backpropagate
+
+                // solve it.
+                // RMS prop
+                //solver.step(thread_parameters, 0.01, 0.0);
+                // AdaDelta
+                solver.step(thread_parameters);
+                // SGD
+                // solver.step(thread_parameters, 0.3/minibatch_size, 0.0);
+                cost = validation_error(model, valid_set);
+
+                std::cout << "epoch (" << total_epochs << ") perplexity = "
+                                                          << std::fixed
+                          << std::setw( 5 ) // keep 7 digits
+                          << std::setprecision( 3 ) // use 3 decimals
+                          << std::setfill( ' ' ) << cost << std::endl;
+
+            }
+        }, t);
+    }
+
+    for(auto& t: ts)
+        t.join();
+/*
+    for (auto& param : parameters) {
+            param->npy_save(stdout);
+    }
+*/
+    // utils::save_matrices(parameters, "paul_graham_params");
+
+    // outputs:
+    //> epoch (0) perplexity = -5.70376
+    //> epoch (100) perplexity = -2.54203
 }

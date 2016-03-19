@@ -49,8 +49,6 @@ DEFINE_double(embedding_learning_rate, -1.0,  "A separate learning rate for embe
 DEFINE_bool(svd_init,             true,       "Initialize weights using SVD?");
 DEFINE_bool(average_gradient,     false,      "Error during minibatch should be average or sum of errors.");
 
-DEFINE_bool(gpu,                  true,       "Run computation on GPU.");
-
 ThreadPool* pool;
 
 int main (int argc,  char* argv[]) {
@@ -63,10 +61,7 @@ int main (int argc,  char* argv[]) {
         " @date April 7th 2015"
     );
     GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
-
-    #ifdef DALI_USE_CUDA
-    default_preferred_device = FLAGS_gpu ? DEVICE_GPU : DEVICE_CPU;
-    #endif
+    utils::update_device(FLAGS_device);
 
     auto epochs              = FLAGS_epochs;
 

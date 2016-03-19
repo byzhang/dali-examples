@@ -12,6 +12,7 @@
 DECLARE_string(visualizer_hostname);
 DECLARE_int32(visualizer_port);
 DECLARE_string(visualizer);
+DECLARE_int32(device);
 
 namespace utils {
     template<typename T>
@@ -67,6 +68,10 @@ namespace utils {
     std::vector<std::string> data : the strings corresponding to the trigger targets
     **/
     str_sequence triggers_to_strings(const google::protobuf::RepeatedPtrField<Example::Trigger>&, const str_sequence&);
+
+    // what device to run computation on
+    // -1 for cpu, else indicates which gpu to use (will fail on cpu-only Dali)
+    void update_device(int);
 }
 
 

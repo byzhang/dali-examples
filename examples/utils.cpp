@@ -1,8 +1,15 @@
 #include "utils.h"
 
+#include <dali/math/SynchronizedMemory.h>
+
+#ifdef DALI_USE_CUDA
+    #include <dali/utils/gpu_utils.h>
+#endif
+
 DEFINE_string(visualizer_hostname, "127.0.0.1", "Default hostname to be used by visualizer.");
 DEFINE_int32(visualizer_port,      6379,        "Default port to be used by visualizer.");
 DEFINE_string(visualizer,          "",          "What to name the visualization job.");
+DEFINE_int32(device,              -1,           "What device to run the computation on (-1 for cpu, or number of gpu: 0, 1, ..).");
 
 using std::string;
 using std::stringstream;
@@ -83,5 +90,28 @@ namespace utils {
             if (trig.id() < index2target.size())
                 data.emplace_back(index2target[trig.id()]);
         return data;
+    }
+
+    void update_device(int device_name) {
+        if (device_name == -1) {
+            default_preferred_device = DEVICE_CPU;
+        } else if (device_name >= 0) {
+            #ifdef DALI_USE_CUDA
+                default_preferred_device = DEVICE_GPU;
+                gpu_utils::set_default_gpu(device_name);
+            #else
+                utils::assert2(
+                    device_name >= -1,
+                    utils::MS() << "Dali compiled without GPU support: "
+                                << "update_device's device_name argument must be -1 for cpu"
+                );
+
+            #endif
+        } else {
+            utils::assert2(
+                device_name >= -1,
+                utils::MS() << "update_device's device_name argument must be >= -1"
+            );
+        }
     }
 }

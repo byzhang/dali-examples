@@ -1,9 +1,11 @@
-#include "dali/core.h"
-#include "dali/utils.h"
-#include "dali/utils/stacked_model_builder.h"
-#include "dali/models/StackedModel.h"
-#include "dali/data_processing/Arithmetic.h"
-#include "dali/execution/BeamSearch.h"
+#include <dali/core.h>
+#include <dali/utils.h>
+#include <dali/utils/stacked_model_builder.h>
+#include <dali/models/StackedModel.h>
+#include <dali/data_processing/Arithmetic.h>
+#include <dali/execution/BeamSearch.h>
+
+#include "utils.h"
 
 using std::string;
 using std::vector;
@@ -88,6 +90,7 @@ int main (int argc,  char* argv[]) {
     );
 
     GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
+    utils::update_device(FLAGS_device);
 
     auto examples = arithmetic::generate_numerical(FLAGS_num_examples, FLAGS_expression_length);
     pool = new ThreadPool(FLAGS_j);

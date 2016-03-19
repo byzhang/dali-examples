@@ -16,9 +16,6 @@
 #include <dali/utils/stacked_model_builder.h>
 #include <dali/models/StackedModel.h>
 #include <dali_visualizer/visualizer.h>
-#ifdef DALI_USE_CUDA
-    #include <dali/utils/gpu_utils.h>
-#endif
 
 #include "utils.h"
 
@@ -31,9 +28,6 @@ DEFINE_double(dropout,             0.3,  "How many Hintons to include in the neu
 DEFINE_int32(max_sentence_length,  19,   "How many sentences to demo after each epoch.");
 DEFINE_bool(show_reconstructions,  true, "Show example reconstructions during phase.");
 DEFINE_bool(show_wps,              false,"LSTM's memory cell also control gate outputs");
-#ifdef DALI_USE_CUDA
-    DEFINE_int32(device,           0,    "Which gpu to use for computation.");
-#endif
 
 
 using std::ifstream;
@@ -258,10 +252,7 @@ int main( int argc, char* argv[]) {
     );
 
     GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
-
-#ifdef DALI_USE_CUDA
-    gpu_utils::set_default_gpu(FLAGS_device);
-#endif
+    utils::update_device(FLAGS_device);
 
     utils::Vocab      word_vocab;
     vector<LanguageBatch<REAL_t>> training;
@@ -284,10 +275,8 @@ int main( int argc, char* argv[]) {
               << "    Training cutoff = " << FLAGS_cutoff           << std::endl
               << "  Number of threads = " << FLAGS_j                << std::endl
               << "     minibatch size = " << FLAGS_minibatch        << std::endl
-              << "       max_patience = " << FLAGS_patience         << std::endl;
-#ifdef DALI_USE_CUDA
-    std::cout << "             device = " << gpu_utils::get_gpu_name(FLAGS_device) << std::endl;
-#endif
+              << "       max_patience = " << FLAGS_patience         << std::endl
+              << "             device = " << (FLAGS_device == -1 ? "cpu" : "gpu") << std::endl;
     pool = new ThreadPool(FLAGS_j);
     shared_ptr<Visualizer> visualizer;
 

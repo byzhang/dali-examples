@@ -2,15 +2,17 @@
 #include <gflags/gflags.h>
 #include <memory>
 
-#include "dali/core.h"
+#include <dali/core.h>
+
+#include "utils.h"
 
 typedef Mat<double> mat;
-
 
 int main( int argc, char* argv[]) {
     GFLAGS_NAMESPACE::SetUsageMessage(
     "RNN Kindergarden - Lesson 1 - Learning to add.");
     GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
+    utils::update_device(FLAGS_device);
 
     dali_init();
 

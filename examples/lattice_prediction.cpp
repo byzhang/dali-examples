@@ -3,12 +3,13 @@
 #include <gflags/gflags.h>
 #include <iterator>
 
-#include "dali/core.h"
-#include "dali/utils.h"
-#include "dali/utils/stacked_model_builder.h"
-#include "dali/utils/NlpUtils.h"
-#include "dali/models/StackedGatedModel.h"
+#include <dali/core.h>
+#include <dali/utils.h>
+#include <dali/utils/stacked_model_builder.h>
+#include <dali/utils/NlpUtils.h>
+#include <dali/models/StackedGatedModel.h>
 
+#include "utils.h"
 
 DEFINE_string(lattice, "", "Where to load a lattice / Ontology from ?");
 
@@ -263,6 +264,7 @@ int main( int argc, char* argv[]) {
     );
 
     GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
+    utils::update_device(FLAGS_device);
 
     auto lattice = OntologyBranch::load(FLAGS_lattice)[0];
     auto max_branching_factor = lattice->max_branching_factor();

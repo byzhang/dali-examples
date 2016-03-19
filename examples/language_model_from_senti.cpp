@@ -4,13 +4,15 @@
 #include <iterator>
 #include <chrono>
 
-#include "dali/core.h"
-#include "dali/utils.h"
-#include "dali/utils/stacked_model_builder.h"
-#include "dali/utils/NlpUtils.h"
-#include "dali/data_processing/SST.h"
-#include "dali/models/StackedModel.h"
-#include "dali/models/StackedGatedModel.h"
+#include <dali/core.h>
+#include <dali/utils.h>
+#include <dali/utils/stacked_model_builder.h>
+#include <dali/utils/NlpUtils.h>
+#include <dali/data_processing/SST.h>
+#include <dali/models/StackedModel.h>
+#include <dali/models/StackedGatedModel.h>
+
+#include "utils.h"
 
 
 // #define USE_GATES
@@ -215,6 +217,7 @@ int main( int argc, char* argv[]) {
 
 
     GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
+    utils::update_device(FLAGS_device);
 
     auto epochs              = FLAGS_epochs;
     auto sentiment_treebank  = SST::load(FLAGS_train);
