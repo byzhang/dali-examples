@@ -3,11 +3,12 @@ set(CMAKE_LEGACY_CYGWIN_WIN32 0)
 
 project("dali-examples")
 
-
-
-
 # additional cmake find files
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
+# find Dali.
+find_package(Dali REQUIRED)
+include_directories(${DALI_INCLUDE_DIRS})
 
 # include gflags and make sure namespace is correct depending
 # on installed version (google:: VS gflags::)
@@ -15,34 +16,25 @@ find_package(Gflags REQUIRED)
 add_definitions(-DGFLAGS_NAMESPACE=${GFLAGS_NAMESPACE})
 include_directories(${GFLAGS_INCLUDE_DIRS})
 
-find_package(CUDA)
-include_directories(${CUDA_INCLUDE_DIRS})
-
-add_subdirectory(${PROJECT_SOURCE_DIR}/protobuf)
-include_directories(${PROJECT_SOURCE_DIR})
-
 add_subdirectory(${PROJECT_SOURCE_DIR}/third_party/SQLiteCpp)
 include_directories(${PROJECT_SOURCE_DIR}/third_party/SQLiteCpp/include)
 
-
-
-
 # ensure we are using C++11
+# TODO(jonathan): is this flag required for apple?
 # -stdlib=libc++
-SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} --std=c++11 -O3 -g -fPIC" )
+SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} --std=c++11 -O3 -g -fPIC" )
 
 
+# compile protobufs defined by us.
+add_subdirectory(${PROJECT_SOURCE_DIR}/protobuf)
+include_directories(${PROJECT_SOURCE_DIR})
+
+# compile utils for examples - handling protobufs and sqlite etc.
+add_library(utils examples/utils.cpp examples/utils.h)
+target_link_libraries(utils SQLiteCpp sqlite3 proto ${CMAKE_DL_LIBS})
 
 
-
-
-
-
-
-
-
-
-
+# Compile all the examples
 set(EXAMPLES_DIR ${PROJECT_SOURCE_DIR}/examples)
 set(EXAMPLES_BUILD_DIR ${PROJECT_SOURCE_DIR}/build/examples)
 set(EXAMPLE_PROGRAMS api_showcase
@@ -67,28 +59,15 @@ set(EXAMPLE_PROGRAMS api_showcase
                      visualizer
                      )
 
-
-add_library(utils examples/utils.cpp examples/utils.h)
-target_link_libraries(utils SQLiteCpp sqlite3 proto ${CMAKE_DL_LIBS})
-
-
-
-#################### CONVERT ME TO FINDDALI.cmake #############################
-# also create DALI_INCLUDES variable
-find_package(ZLIB REQUIRED)
-find_library(DALI_CORE_LIBRARIES dali)
-find_library(DALI_GPU_LIBRARIES dali_cuda)
-LIST(APPEND DALI_LIBRARIES ${DALI_CORE_LIBRARIES})
-LIST(APPEND DALI_LIBRARIES ${DALI_GPU_LIBRARIES})
-###############################################################################
-
-
 foreach(program ${EXAMPLE_PROGRAMS})
     add_executable(${program} ${EXAMPLES_DIR}/${program}.cpp)
-    target_link_libraries(${program} ${DALI_LIBRARIES} ${GFLAGS_LIBRARIES} ${ZLIB_LIBRARIES} utils)
-    if (MKL_FOUND AND BLAS_FOUND)
-        add_custom_command(TARGET ${program}
-            COMMAND sh ${PROJECT_SOURCE_DIR}/scripts/fix_dylib.sh ${EXAMPLES_BUILD_DIR}/${program}
-            WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/build)
-    endif (MKL_FOUND AND BLAS_FOUND)
+    target_link_libraries(${program} ${GFLAGS_LIBRARIES} ${DALI_LIBRARIES} utils)
+
+    # TODO(jonathan): fix this. preferably move to dali, or at least make
+    # a cmake function provided by find dali
+    # if (MKL_FOUND AND BLAS_FOUND)
+    #     add_custom_command(TARGET ${program}
+    #         COMMAND sh ${PROJECT_SOURCE_DIR}/scripts/fix_dylib.sh ${EXAMPLES_BUILD_DIR}/${program}
+    #         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/build)
+    # endif (MKL_FOUND AND BLAS_FOUND)
 endforeach(program)
