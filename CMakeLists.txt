@@ -10,12 +10,6 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 find_package(Dali REQUIRED)
 include_directories(${DALI_INCLUDE_DIRS})
 
-# include gflags and make sure namespace is correct depending
-# on installed version (google:: VS gflags::)
-find_package(Gflags REQUIRED)
-add_definitions(-DGFLAGS_NAMESPACE=${GFLAGS_NAMESPACE})
-include_directories(${GFLAGS_INCLUDE_DIRS})
-
 add_subdirectory(${PROJECT_SOURCE_DIR}/third_party/SQLiteCpp)
 include_directories(${PROJECT_SOURCE_DIR}/third_party/SQLiteCpp/include)
 
@@ -61,7 +55,7 @@ set(EXAMPLE_PROGRAMS api_showcase
 
 foreach(program ${EXAMPLE_PROGRAMS})
     add_executable(${program} ${EXAMPLES_DIR}/${program}.cpp)
-    target_link_libraries(${program} ${GFLAGS_LIBRARIES} ${DALI_LIBRARIES} openblas dali_visualizer utils)
+    target_link_libraries(${program} ${DALI_LIBRARIES} dali_visualizer utils)
 
     # TODO(jonathan): fix this. preferably move to dali, or at least make
     # a cmake function provided by find dali
