@@ -3,6 +3,7 @@
 #include <dali/data_processing/Arithmetic.h>
 #include <dali_visualizer/visualizer.h>
 
+#include "models/standard_flags.h"
 #include "utils.h"
 
 using arithmetic::numeric_example_t;

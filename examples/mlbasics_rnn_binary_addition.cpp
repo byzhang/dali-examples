@@ -11,6 +11,7 @@
 #include <dali/core.h>
 #include <dali/utils.h>
 
+#include "models/standard_flags.h"
 #include "utils.h"
 
 typedef double R;
@@ -20,7 +21,6 @@ using std::chrono::milliseconds;
 using std::make_shared;
 using std::max;
 using std::vector;
-
 
 int main( int argc, char* argv[]) {
     sane_crashes::activate();
@@ -81,7 +81,7 @@ int main( int argc, char* argv[]) {
     uint patience = 0;
 
     Solver::SGD<R> solver(params);
-    solver.step_size = FLAGS_learning_rate;
+    solver.step_size = 0.1;
 
     for (int epoch = 0; ; ++epoch) {
         // Average cross entropy bit error per bit.

@@ -9,7 +9,6 @@
 
 #include <dali/core.h>
 #include <dali/utils.h>
-#include <dali/utils/model_saving.h>
 
 template<typename R>
 class RecurrentEmbeddingModel {

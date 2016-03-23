@@ -1,5 +1,7 @@
 #include "RecurrentEmbeddingModel.h"
 
+#include "models/standard_flags.h"
+
 using std::string;
 using std::vector;
 using std::stringstream;

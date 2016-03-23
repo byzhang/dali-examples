@@ -9,6 +9,7 @@
 
 #include "models/stacked_model_builder.h"
 #include "models/StackedGatedModel.h"
+#include "models/standard_flags.h"
 #include "utils.h"
 
 DEFINE_string(lattice, "", "Where to load a lattice / Ontology from ?");

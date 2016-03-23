@@ -10,6 +10,7 @@
 
 #include "models/stacked_model_builder.h"
 #include "models/StackedModel.h"
+#include "models/standard_flags.h"
 
 auto default_paul_graham_location = utils::dir_join({ STR(DALI_DATA_DIR) , "paul_graham", "train.txt" });
 

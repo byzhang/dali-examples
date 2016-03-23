@@ -12,6 +12,7 @@
 #include "models/stacked_model_builder.h"
 #include "models/StackedModel.h"
 #include "models/StackedGatedModel.h"
+#include "models/standard_flags.h"
 #include "utils.h"
 
 

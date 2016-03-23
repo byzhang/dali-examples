@@ -14,6 +14,7 @@
 #include <dali_visualizer/visualizer.h>
 
 #include "models/shallow_copy.h"
+#include "models/standard_flags.h"
 #include "models/RecurrentEmbeddingModel.h"
 #include "utils.h"
 

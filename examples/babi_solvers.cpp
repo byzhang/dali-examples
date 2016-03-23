@@ -4,8 +4,8 @@
 #include <set>
 #include <vector>
 #include <json11.hpp>
-#include <gflags/gflags.h>
 
+#include "models/standard_flags.h"
 #include <dali/data_processing/babi.h>
 #include <dali/core.h>
 #include <dali/utils.h>

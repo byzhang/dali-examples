@@ -8,6 +8,8 @@
 #include <dali/utils/core_utils.h>
 #include <dali/utils/SaneCrashes.h>
 
+#include "models/standard_flags.h"
+
 using std::shared_ptr;
 using std::make_shared;
 using std::chrono::seconds;

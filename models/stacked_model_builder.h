@@ -13,7 +13,7 @@ DEFINE_double(decay_rate,       0.95, "What decay rate should RMSProp use ?");
 DEFINE_double(rho,              0.95, "What rho / learning rate should the Solver use ?");
 DEFINE_bool(shortcut,           true, "Use a Stacked LSTM with shortcuts");
 DEFINE_bool(memory_feeds_gates, true, "LSTM's memory cell also control gate outputs");
-DEFINE_double(memory_penalty, 0.3, "L1 Penalty on Input Gate activation.");
+DEFINE_double(memory_penalty,   0.3,  "L1 Penalty on Input Gate activation.");
 
 
 template<typename Z>

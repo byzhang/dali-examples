@@ -3,6 +3,7 @@
 #include <dali/data_processing/Arithmetic.h>
 #include <dali/execution/BeamSearch.h>
 
+#include "models/standard_flags.h"
 #include "models/stacked_model_builder.h"
 #include "models/StackedModel.h"
 #include "utils.h"

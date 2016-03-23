@@ -5,6 +5,7 @@
 #include <sstream>
 #include <dali/utils.h>
 
+#include "models/standard_flags.h"
 #include "utils.h"
 #include "SQLiteCpp/Database.h"
 

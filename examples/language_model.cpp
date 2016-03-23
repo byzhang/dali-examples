@@ -17,6 +17,7 @@
 
 #include "models/stacked_model_builder.h"
 #include "models/StackedModel.h"
+#include "models/standard_flags.h"
 #include "utils.h"
 
 DEFINE_int32(minibatch,            100,  "What size should be used for the minibatches ?");

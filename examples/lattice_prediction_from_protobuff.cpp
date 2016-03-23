@@ -6,6 +6,7 @@
 #include <dali/utils.h>
 
 #include "models/StackedGatedModel.h"
+#include "models/standard_flags.h"
 #include "utils.h"
 
 DEFINE_string(index2target, "", "Location of Index2Target file with mapping from integer to target name.");
