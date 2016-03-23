@@ -10,7 +10,7 @@ message("CMAKE_PREFIX_PATH " ${CMAKE_PREFIX_PATH})
 
 # find Dali.
 find_package(Dali REQUIRED)
-include_directories(${DALI_INCLUDE_DIRS})
+include_directories(${DALI_AND_DEPS_INCLUDE_DIRS})
 
 # find gflags
 find_package(Gflags REQUIRED)
@@ -63,7 +63,7 @@ set(EXAMPLE_PROGRAMS api_showcase
 
 foreach(program ${EXAMPLE_PROGRAMS})
     add_executable(${program} ${EXAMPLES_DIR}/${program}.cpp)
-    target_link_libraries(${program} ${DALI_LIBRARIES} ${GFLAGS_LIBRARIES} dali_visualizer utils)
+    target_link_libraries(${program} ${DALI_AND_DEPS_LIBRARIES} ${GFLAGS_LIBRARIES} dali_visualizer utils)
 
     # TODO(jonathan): fix this. preferably move to dali, or at least make
     # a cmake function provided by find dali
