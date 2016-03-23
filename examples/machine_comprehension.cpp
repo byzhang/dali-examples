@@ -8,8 +8,8 @@
 #include <dali/data_processing/machine_comprehension.h>
 #include <dali/data_processing/Glove.h>
 #include <dali/utils.h>
-#include <dali/models/QuestionAnswering.h>
 
+#include "models/QuestionAnswering.h"
 #include "utils.h"
 
 using mc::Section;

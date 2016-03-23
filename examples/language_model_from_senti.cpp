@@ -6,12 +6,12 @@
 
 #include <dali/core.h>
 #include <dali/utils.h>
-#include <dali/utils/stacked_model_builder.h>
 #include <dali/utils/NlpUtils.h>
 #include <dali/data_processing/SST.h>
-#include <dali/models/StackedModel.h>
-#include <dali/models/StackedGatedModel.h>
 
+#include "models/stacked_model_builder.h"
+#include "models/StackedModel.h"
+#include "models/StackedGatedModel.h"
 #include "utils.h"
 
 

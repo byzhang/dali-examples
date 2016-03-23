@@ -13,10 +13,10 @@
 #include <dali/core.h>
 #include <dali/utils.h>
 #include <dali/utils/NlpUtils.h>
-#include <dali/utils/stacked_model_builder.h>
-#include <dali/models/StackedModel.h>
 #include <dali_visualizer/visualizer.h>
 
+#include "models/stacked_model_builder.h"
+#include "models/StackedModel.h"
 #include "utils.h"
 
 DEFINE_int32(minibatch,            100,  "What size should be used for the minibatches ?");

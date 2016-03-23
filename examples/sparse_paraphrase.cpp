@@ -12,8 +12,9 @@
 #include <dali/data_processing/Paraphrase.h>
 #include <dali/data_processing/Glove.h>
 #include <dali_visualizer/visualizer.h>
-#include <dali/models/RecurrentEmbeddingModel.h>
 
+#include "models/shallow_copy.h"
+#include "models/RecurrentEmbeddingModel.h"
 #include "utils.h"
 
 using namespace std::placeholders;

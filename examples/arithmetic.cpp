@@ -1,10 +1,10 @@
 #include <dali/core.h>
 #include <dali/utils.h>
-#include <dali/utils/stacked_model_builder.h>
-#include <dali/models/StackedModel.h>
 #include <dali/data_processing/Arithmetic.h>
 #include <dali/execution/BeamSearch.h>
 
+#include "models/stacked_model_builder.h"
+#include "models/StackedModel.h"
 #include "utils.h"
 
 using std::string;

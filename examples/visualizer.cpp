@@ -4,7 +4,7 @@
 #include <thread>
 #include <json11.hpp>
 
-#include "dali_visualizer/visualizer.h"
+#include <dali_visualizer/visualizer.h>
 
 using json11::Json;
 using namespace dali::visualizer;

@@ -4,8 +4,8 @@
 #include <iterator>
 #include <dali/core.h>
 #include <dali/utils.h>
-#include <dali/models/StackedGatedModel.h>
 
+#include "models/StackedGatedModel.h"
 #include "utils.h"
 
 DEFINE_string(index2target, "", "Location of Index2Target file with mapping from integer to target name.");

@@ -7,8 +7,9 @@
 #include <thread>
 
 #include <dali/core.h>
-#include <dali/models/StackedModel.h>
-#include <dali/utils/stacked_model_builder.h>
+
+#include "models/stacked_model_builder.h"
+#include "models/StackedModel.h"
 
 auto default_paul_graham_location = utils::dir_join({ STR(DALI_DATA_DIR) , "paul_graham", "train.txt" });
 

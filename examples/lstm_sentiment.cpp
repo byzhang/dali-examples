@@ -9,12 +9,13 @@
 #include <dali/core.h>
 #include <dali/utils.h>
 #include <dali/utils/NlpUtils.h>
-#include <dali/utils/stacked_model_builder.h>
 #include <dali/data_processing/SST.h>
 #include <dali/data_processing/Glove.h>
-#include <dali/models/StackedModel.h>
 #include <dali_visualizer/visualizer.h>
 
+#include "models/stacked_model_builder.h"
+#include "models/shallow_copy.h"
+#include "models/StackedModel.h"
 #include "utils.h"
 
 using std::atomic;

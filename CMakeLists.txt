@@ -4,7 +4,9 @@ set(CMAKE_LEGACY_CYGWIN_WIN32 0)
 project("dali-examples")
 
 # additional cmake find files
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+message("CMAKE_MODULE_PATH " ${CMAKE_MODULE_PATH})
+message("CMAKE_PREFIX_PATH " ${CMAKE_PREFIX_PATH})
+# set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 # find Dali.
 find_package(Dali REQUIRED)
@@ -24,9 +26,10 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/protobuf)
 include_directories(${PROJECT_SOURCE_DIR})
 
 # compile utils for examples - handling protobufs and sqlite etc.
-add_library(utils examples/utils.cpp examples/utils.h)
+file(GLOB_RECURSE UTILS_FILES "${PROJECT_SOURCE_DIR}/models/*.cpp")
+list(APPEND       UTILS_FILES "examples/utils.h")
+add_library(utils examples/utils.cpp ${UTILS_FILES})
 target_link_libraries(utils SQLiteCpp sqlite3 proto ${CMAKE_DL_LIBS})
-
 
 # Compile all the examples
 set(EXAMPLES_DIR ${PROJECT_SOURCE_DIR}/examples)
