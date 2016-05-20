@@ -4,9 +4,9 @@ set(CMAKE_LEGACY_CYGWIN_WIN32 0)
 project("dali-examples")
 
 # additional cmake find files
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 message("CMAKE_MODULE_PATH " ${CMAKE_MODULE_PATH})
 message("CMAKE_PREFIX_PATH " ${CMAKE_PREFIX_PATH})
-# set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 # find Dali.
 find_package(Dali REQUIRED)
@@ -17,8 +17,14 @@ find_package(Gflags REQUIRED)
 include_directories(${GFLAGS_INCLUDE_DIRS})
 add_definitions(-DGFLAGS_NAMESPACE=${GFLAGS_NAMESPACE})
 
+add_subdirectory(${PROJECT_SOURCE_DIR}/visualizer-clients/cpp)
+include_directories(${PROJECT_SOURCE_DIR}/visualizer-clients/cpp)
+include_directories(${PROJECT_SOURCE_DIR}/visualizer-clients/cpp/third_party/json11)
+include_directories(${PROJECT_SOURCE_DIR}/visualizer-clients/cpp/third_party/redox/include)
+
 add_subdirectory(${PROJECT_SOURCE_DIR}/third_party/SQLiteCpp)
 include_directories(${PROJECT_SOURCE_DIR}/third_party/SQLiteCpp/include)
+include_directories(${PROJECT_SOURCE_DIR}/third_party/SQLiteCpp/sqlite3)
 
 # ensure we are using C++11
 # TODO(jonathan): is this flag required for apple?
@@ -63,7 +69,11 @@ set(EXAMPLE_PROGRAMS api_showcase
 
 foreach(program ${EXAMPLE_PROGRAMS})
     add_executable(${program} ${EXAMPLES_DIR}/${program}.cpp)
-    target_link_libraries(${program} ${DALI_AND_DEPS_LIBRARIES} ${GFLAGS_LIBRARIES} dali_visualizer utils)
+    target_link_libraries(${program} ${DALI_AND_DEPS_LIBRARIES} ${GFLAGS_LIBRARIES}
+      dali_visualizer
+      utils
+      z
+    )
 
     # TODO(jonathan): fix this. preferably move to dali, or at least make
     # a cmake function provided by find dali
