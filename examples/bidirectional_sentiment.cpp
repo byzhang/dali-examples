@@ -251,17 +251,17 @@ class BidirectionalLSTM {
             std::tuple<Mat<T>, Mat<T>> prediction_tuple;
 
             if (convolution) {
-                auto convolved = MatOps<T>::conv1d(
-                    embedding[example],
-                    filters->filters,
-                    example.size() < 2
-                ).tanh();
-                for (size_t i = 0; i < convolved.dims(1); i++) {
-                    embeddingX.emplace_back(convolved(NULL, i));
-                    // null as first argument means "for all rows take this column"
-                    forwardX.push_back(embeddingX.back());
-                    backwardX.push_back(forwardX.back());
-                }
+                // auto convolved = MatOps<T>::conv1d(
+                //     embedding[example],
+                //     filters->filters,
+                //     example.size() < 2
+                // ).tanh();
+                // for (size_t i = 0; i < convolved.dims(1); i++) {
+                //     embeddingX.emplace_back(convolved(NULL, i));
+                //     // null as first argument means "for all rows take this column"
+                //     forwardX.push_back(embeddingX.back());
+                //     backwardX.push_back(forwardX.back());
+                // }
             } else {
                 for (size_t i = 0; i < example.size(); i++) {
                     embeddingX.emplace_back(embedding[example[i]]);

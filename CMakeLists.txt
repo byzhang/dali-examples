@@ -3,6 +3,9 @@ set(CMAKE_LEGACY_CYGWIN_WIN32 0)
 
 project("dali-examples")
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
+set(CMAKE_EXPORT_COMPILE_COMMANDS "${CMAKE_EXPORT_COMPILE_COMMANDS}" CACHE STRING "export compile_commands.json")
+
 # additional cmake find files
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 message("CMAKE_MODULE_PATH " ${CMAKE_MODULE_PATH})
