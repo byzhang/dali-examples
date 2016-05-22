@@ -1,10 +1,9 @@
 #include "utils.h"
 
-#include <dali/math/SynchronizedMemory.h>
-
-#ifdef DALI_USE_CUDA
-    #include <dali/utils/gpu_utils.h>
-#endif
+#include <dali/array/memory/device.h>
+#include <dali/runtime_config.h>
+#include <dali/utils/assert2.h>
+#include <dali/utils/print_utils.h>
 
 DEFINE_string(visualizer_hostname, "127.0.0.1", "Default hostname to be used by visualizer.");
 DEFINE_int32(visualizer_port,      6379,        "Default port to be used by visualizer.");
@@ -94,11 +93,10 @@ namespace utils {
 
     void update_device(int device_name) {
         if (device_name == -1) {
-            default_preferred_device = DEVICE_CPU;
+            memory::default_preferred_device = memory::Device::cpu();
         } else if (device_name >= 0) {
             #ifdef DALI_USE_CUDA
-                default_preferred_device = DEVICE_GPU;
-                gpu_utils::set_default_gpu(device_name);
+                memory::default_preferred_device = memory::Device::gpu(device_name);
             #else
                 utils::assert2(
                     device_name >= -1,
