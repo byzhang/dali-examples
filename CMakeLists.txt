@@ -64,10 +64,10 @@ set(EXAMPLE_PROGRAMS api_showcase
                      sparse_paraphrase
                      visualizer
                      )
-
+message("DALI_AND_DEPS_LIBRARIES => " ${DALI_AND_DEPS_LIBRARIES})
 foreach(program ${EXAMPLE_PROGRAMS})
     add_executable(${program} ${EXAMPLES_DIR}/${program}.cpp)
-    target_link_libraries(${program} ${DALI_AND_DEPS_LIBRARIES} ${GFLAGS_LIBRARIES} dali_visualizer utils)
+    target_link_libraries(${program} utils ${DALI_AND_DEPS_LIBRARIES} ${GFLAGS_LIBRARIES})
 
     # TODO(jonathan): fix this. preferably move to dali, or at least make
     # a cmake function provided by find dali
