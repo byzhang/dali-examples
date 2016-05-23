@@ -39,7 +39,7 @@ int main( int argc, char* argv[]) {
     W.print();
 
     std::vector<Tensor> params = { W };
-    // auto solver = Solver::SGD<double>(params);
+    auto solver = solver::SGD(params);
 
     for (int i = 0; i < ITERATIONS; ++i) {
         // What the network predicts the output will be.
@@ -58,7 +58,7 @@ int main( int argc, char* argv[]) {
         // This is slightly obnoxious, but fear not - we
         // provide a solver class, so that you
         // never how to do it on your own!
-        // solver.step(params, LR);
+        solver.step(params, LR);
     }
     // Print the weights after we are done. The should all be close to one.
     W.print();
