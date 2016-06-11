@@ -9,12 +9,11 @@
 #include <vector>
 
 #include <dali/core.h>
+#include <dali/layers/layers.h>
 #include <dali/utils.h>
 
 #include "models/standard_flags.h"
 #include "utils.h"
-
-typedef double R;
 
 using std::bitset;
 using std::chrono::milliseconds;
@@ -62,25 +61,24 @@ int main( int argc, char* argv[]) {
     // Here rnn corresponds to a simple mapping H' = W * [X, H] + b
     // (where X is input, W,b are weights and bias, H, H' are hidden state
     // and new hidden state). Note it does not contain a nonlinearity!
-    RNN<R>    rnn(INPUT_SIZE, MEMORY_SIZE);
+    RNN    rnn(INPUT_SIZE, MEMORY_SIZE);
     // Defines a mapping from memory to result bit. It computes a mapping Y=W*X+b
-    Layer<R>  classifier(MEMORY_SIZE, OUTPUT_SIZE);
-    // Defines initial state of a memory (HINT: it's also a parameter)
-    Mat<R>    rnn_initial(1, MEMORY_SIZE);
+    Layer  classifier(MEMORY_SIZE, OUTPUT_SIZE);
+    // Defines initial state of a memory
+    auto rnn_initial = rnn.initial_states();
 
     // For convenience we store all the parameters that we are going to update during training
     // in a vector params. Rnn and classifier are Layers and already provide a piece
     // of code that extracts all the relevant parameters.
-    vector<Mat<R>> params;
+    vector<Tensor> params;
     auto rnn_params = rnn.parameters();
     auto classifier_params = classifier.parameters();
-    params.push_back(rnn_initial);
     params.insert(params.end(), rnn_params.begin(), rnn_params.end());
     params.insert(params.end(), classifier_params.begin(), classifier_params.end());
 
     uint patience = 0;
 
-    Solver::SGD<R> solver(params);
+    solver::SGD solver(params);
     solver.step_size = 0.1;
 
     for (int epoch = 0; ; ++epoch) {
@@ -111,35 +109,36 @@ int main( int argc, char* argv[]) {
             // to compute the prediction. "prev_hidden" will always how the
             // previous hidden/memory state. "error" will accumulate cross
             // entropy error.
-            Mat<R> prev_hidden = rnn_initial;
-            Mat<R> error(1,1);
+            Tensor prev_hidden = rnn_initial;
+            Tensor error({1,1});
 
             for (int i=0; i< NUM_BITS; ++i) {
                 // soon we will support constant and need for converting this
                 // to matrix class will disappear.
-                Mat<R> input_i(1, INPUT_SIZE);
-                input_i.w(0) = a_bits[i];
-                input_i.w(1) = b_bits[i];
+                Tensor input_i({1, INPUT_SIZE});
+                input_i.w = vector<vector<float>> {
+                    {a_bits[i], b_bits[i] }
+                };
 
                 // advance RNN. We have a choice to use different nonlinearities,
                 // but in this case we use tanh.
                 prev_hidden = rnn.activate(input_i, prev_hidden).tanh();
                 // compute the output bit, apply sigmoid to trap it in [0,1] interval.
-                Mat<R> output_i = classifier.activate(prev_hidden).sigmoid();
+                Tensor output_i = classifier.activate(prev_hidden).sigmoid();
                 // output bit can be any number between 0, 1, so we round it.
-                predicted_res_bits[i] = output_i.w(0) < 0.5 ? 0 : 1;
+                predicted_res_bits[i] = (float)output_i.w(0) < 0.5 ? 0 : 1;
 
                 // update errors
                 epoch_bit_error += res_bits[i] != predicted_res_bits[i];
-                error = error + MatOps<R>::binary_cross_entropy(output_i, (R)res_bits[i]);
+                error = error + tensor_ops::binary_cross_entropy(output_i, (float)res_bits[i]);
 
                 // Alternatively we could use square error - it converges slightly slower.
                 // error = error + (output_i.sigmoid() - (R)res_bits[i]).square();
             }
             // Make sure we are looking at average error.
-            error = error / (R)NUM_BITS;
+            error = error / NUM_BITS;
             predicted_res = predicted_res_bits.to_ulong();
-            epoch_error += error.w(0);
+            epoch_error += (float)error.w(0);
             // compute gradient
             error.grad();
 
