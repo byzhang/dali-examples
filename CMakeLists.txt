@@ -62,6 +62,7 @@ set(EXAMPLE_PROGRAMS api_showcase
                      sparse_lstm_sentiment
                      sparse_ner
                      sparse_paraphrase
+                     mnist_training
                      visualizer
                      )
 message("DALI_AND_DEPS_LIBRARIES => " ${DALI_AND_DEPS_LIBRARIES})

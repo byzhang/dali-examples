@@ -78,8 +78,8 @@ int main( int argc, char* argv[]) {
 
     uint patience = 0;
 
-    solver::SGD solver(params);
-    solver.step_size = 0.1;
+    solver::Adam solver(params);
+    solver.step_size = 0.01;
 
     for (int epoch = 0; ; ++epoch) {
         // Average cross entropy bit error per bit.
