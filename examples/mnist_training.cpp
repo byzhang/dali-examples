@@ -1,10 +1,12 @@
 #include <iostream>
 #include <vector>
 
-#include "dali/core.h"
-#include "dali/utils.h"
+#include <dali/core.h>
+#include <dali/utils.h>
+#include <dali/tensor/op/spatial.h>
 
-#include "dali/tensor/op/spatial.h"
+#include "utils.h"
+
 
 using std::vector;
 using std::string;
@@ -32,9 +34,9 @@ struct MnistCnn {
     Layer     fc;
 
     MnistCnn() {
-        conv1 = ConvLayer(64, 1,   3, 3);
-        conv2 = ConvLayer(128, 64, 3, 3);
-        fc    = Layer(7 * 7 * 128, 10);
+        conv1 = ConvLayer(16, 1,   3, 3);
+        conv2 = ConvLayer(32, 16, 3, 3);
+        fc    = Layer(7 * 7 * 32, 10);
     }
 
     Tensor activate(Tensor images) const {
@@ -42,13 +44,13 @@ struct MnistCnn {
 
         Tensor out = conv1.activate(images).relu();
         out = tensor_ops::max_pool(out, 2, 2);
-        // shape (B, 64, 14, 14)
+        // shape (B, 16, 14, 14)
 
         out = conv2.activate(out).relu();
         out = tensor_ops::max_pool(out, 2, 2);
-        // shape (B, 128, 7, 7)
+        // shape (B, 32, 7, 7)
 
-        out = out.reshape({out.shape()[0], 7 * 7 * 128});
+        out = out.reshape({out.shape()[0], 7 * 7 * 32});
         out = fc.activate(out);
         // shape (B, 10)
 
@@ -97,6 +99,7 @@ double training_epoch(const MnistCnn& model, std::shared_ptr<solver::AbstractSol
     auto params = model.parameters();
 
     for (int batch_start = 0; batch_start < images.shape()[0]; batch_start+=batch_size) {
+        ELOG(batch_start);
         Tensor batch_idxes  = idxes[Slice(batch_start, std::min(batch_start + batch_size, num_images))];
         Tensor batch_images = images[batch_idxes];
         Tensor batch_labels = labels[batch_idxes];
@@ -156,10 +159,30 @@ std::tuple<Tensor,Tensor,Tensor,Tensor> load_dataset() {
 }
 
 
-int main() {
+int main (int argc, char *argv[]) {
+    GFLAGS_NAMESPACE::SetUsageMessage(
+        "\n"
+        "MNIST training using simple convnet\n"
+        "------------------------------------\n"
+        "\n"
+        " @author Szymon Sidor\n"
+        " @date July 4th 2016"
+    );
+    GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
+
+    if (FLAGS_device == -1) {
+        memory::default_preferred_device = memory::Device::cpu();
+    }
+#ifdef DALI_USE_CUDA
+    if (FLAGS_device >= 0) {
+        memory::default_preferred_device = memory::Device::gpu(FLAGS_device);
+    }
+#endif
+
     utils::random::set_seed(123123);
     const int batch_size = 512;
 
+    use_cudnn = false;
 
     Tensor train_x, train_y, test_x, test_y;
     std::tie(train_x, train_y, test_x, test_y) = load_dataset();
@@ -169,7 +192,7 @@ int main() {
     auto params = model.parameters();
     auto solver = solver::construct("adam", params, 0.0001);
 
-    for (int i = 0; i < 20; ++i) {
+    for (int i = 0; i < 200; ++i) {
         auto epoch_start_time = std::chrono::system_clock::now();
         auto epoch_error      = training_epoch(model, solver, train_x, train_y, batch_size);
         std::chrono::duration<double> epoch_duration
