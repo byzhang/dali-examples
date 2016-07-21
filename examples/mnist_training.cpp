@@ -4,14 +4,18 @@
 #include <dali/core.h>
 #include <dali/utils.h>
 #include <dali/tensor/op/spatial.h>
+#include <dali/utils/performance_report.h>
+#include <dali/utils/concatenate.h>
 
 #include "utils.h"
+
+DEFINE_bool(use_cudnn, true, "Whether to use cudnn library for some GPU operations.");
 
 
 using std::vector;
 using std::string;
 
-const std::string MNIST_PATH = "/home/sidor/tmp/";
+const std::string MNIST_PATH = "/home/sidor/tmp/mnist/";
 
 
 
@@ -28,37 +32,53 @@ const std::string MNIST_PATH = "/home/sidor/tmp/";
  *                   (70000,)
  */
 
+Tensor shitty_softmax(Tensor x) {
+    auto expted = x.exp();
+    return expted / expted.sum(1)[Slice()][Broadcast()];
+}
+
 struct MnistCnn {
     ConvLayer conv1;
     ConvLayer conv2;
-    Layer     fc;
+    Layer     fc1;
+    Layer     fc2;
 
     MnistCnn() {
-        conv1 = ConvLayer(16, 1,   3, 3);
-        conv2 = ConvLayer(32, 16, 3, 3);
-        fc    = Layer(7 * 7 * 32, 10);
+        conv1 = ConvLayer(32, 1,   5, 5);
+        conv2 = ConvLayer(64, 32,  5, 5);
+        fc1   = Layer(7 * 7 * 64, 1024);
+        fc2   = Layer(1024,       10);
     }
 
-    Tensor activate(Tensor images) const {
+    Tensor activate(Tensor images, float keep_prop) const {
+        images = images.reshape({-1, 1, 28, 28});
         // shape (B, 1, 28, 28)
 
         Tensor out = conv1.activate(images).relu();
         out = tensor_ops::max_pool(out, 2, 2);
-        // shape (B, 16, 14, 14)
+        // shape (B, 32, 14, 14)
 
         out = conv2.activate(out).relu();
         out = tensor_ops::max_pool(out, 2, 2);
-        // shape (B, 32, 7, 7)
+        // shape (B, 64, 7, 7)
 
-        out = out.reshape({out.shape()[0], 7 * 7 * 32});
-        out = fc.activate(out);
+        out = out.reshape({out.shape()[0], 7 * 7 * 64});
+        out = fc1.activate(out);
+        // shape (B, 1024)
+
+        out = tensor_ops::dropout(out, 1.0 - keep_prop);
+
+        out = fc2.activate(out);
         // shape (B, 10)
 
         return out;
     }
 
     virtual std::vector<Tensor> parameters() const {
-        return utils::concatenate({conv1.parameters(), conv2.parameters(), fc.parameters()});
+        return utils::concatenate({conv1.parameters(),
+                                   conv2.parameters(),
+                                   fc1.parameters(),
+                                   fc2.parameters()});
     }
 };
 
@@ -70,44 +90,36 @@ double accuracy(const MnistCnn& model, Tensor images, Tensor labels, int batch_s
     auto num_correct = Array::zeros({}, DTYPE_INT32);
     for (int batch_start = 0; batch_start < num_images; batch_start += batch_size) {
         Slice batch_slice(batch_start, std::min(batch_start + batch_size, num_images));
-        auto probs = model.activate(images[batch_slice]);
+        auto probs = model.activate(images[batch_slice], 1.0);
         Array predictions = op::astype(op::argmax(probs.w, -1), DTYPE_INT32);
-
-        num_correct += op::sum(op::equals(predictions, (Array)labels.w[batch_slice]));
+        Array correct     = op::astype(op::argmax(labels.w[batch_slice], -1), DTYPE_INT32);
+        num_correct += op::sum(op::equals(predictions, correct));
     }
     return (Array)(num_correct.astype(DTYPE_DOUBLE) / num_images);
 }
 
-std::vector<int> random_arange_int(int nelemens) {
-    vector<int> res;
-    res.reserve(nelemens);
-    for (int i = 0; i < nelemens; ++i) res.push_back(i);
-    std::random_shuffle(res.begin(), res.end());
-    return res;
-}
-
-
-double training_epoch(const MnistCnn& model, std::shared_ptr<solver::AbstractSolver> solver,
-                      Tensor images, Tensor labels, int batch_size) {
+double training_epoch(const MnistCnn& model,
+                      std::shared_ptr<solver::AbstractSolver> solver,
+                      Tensor images,
+                      Tensor labels,
+                      int batch_size) {
     int num_images = images.shape()[0];
-
-    Tensor idxes = Tensor::empty({num_images}, DTYPE_INT32);
-    idxes.w = random_arange_int(num_images);
 
     double epoch_error;
 
     auto params = model.parameters();
 
-    for (int batch_start = 0; batch_start < images.shape()[0]; batch_start+=batch_size) {
-        ELOG(batch_start);
-        Tensor batch_idxes  = idxes[Slice(batch_start, std::min(batch_start + batch_size, num_images))];
-        Tensor batch_images = images[batch_idxes];
-        Tensor batch_labels = labels[batch_idxes];
+    for (int batch_start = 0;
+            batch_start < images.shape()[0];
+            batch_start+=batch_size) {
+        auto batch_slice = Slice(batch_start, std::min(batch_start + batch_size, num_images));
+        Tensor batch_images = images[batch_slice];
+        Tensor batch_labels = labels[batch_slice];
         batch_images.constant = true;
 
-        Tensor probs = model.activate(batch_images);
+        Tensor probs = model.activate(batch_images, 0.5);
 
-        Tensor error = tensor_ops::softmax_cross_entropy(probs, batch_labels);
+        Tensor error = tensor_ops::cross_entropy(shitty_softmax(probs), batch_labels);
         error.grad();
         epoch_error += (double)(Array)error.w.sum();
 
@@ -119,43 +131,28 @@ double training_epoch(const MnistCnn& model, std::shared_ptr<solver::AbstractSol
 }
 
 
-std::tuple<Tensor,Tensor,Tensor,Tensor> load_dataset() {
+std::vector<Tensor> load_dataset() {
+    auto train_x    = Tensor::load(MNIST_PATH + "train_x.npy");
+    auto train_y    = Tensor::load(MNIST_PATH + "train_y.npy");
 
-    auto data_x = Tensor::load(MNIST_PATH + "mnistX.npy");
-    auto data_y_double = Tensor::load(MNIST_PATH + "mnistY.npy");
-    auto data_y = Tensor(data_y_double.w.astype(DTYPE_INT32));
-    data_x.constant = true;
+    auto validate_x = Tensor::load(MNIST_PATH + "validate_x.npy");
+    auto validate_y = Tensor::load(MNIST_PATH + "validate_y.npy");
 
-    auto desired_data_x_shape = vector<int>{70000,784};
-    ASSERT2(data_x.shape() == desired_data_x_shape, "wrong shape for mnist images.");
-    ASSERT2(data_y.shape() == vector<int>{70000},   "wrong shape for mnist labels.");
-
-    int num_images = data_x.shape()[0];
-    Tensor idxes = Tensor::empty({num_images}, DTYPE_INT32);
-    idxes.w = random_arange_int(num_images);
-    data_x = data_x[idxes];
-    data_y = data_y[idxes];
-    data_x.constant = true;
-
-
-    ELOG(data_x.shape());
-    ELOG(data_y.shape());
-
-    data_x = data_x.reshape({70000, 1, 28, 28});
-    data_x.constant = true;
-
-    Tensor train_x = data_x[Slice(0,     60000)];
-    Tensor test_x  = data_x[Slice(60000, 70000)];
-
-    Tensor train_y = data_y[Slice(0,     60000)];
-    Tensor test_y  = data_y[Slice(60000, 70000)];
+    auto test_x     = Tensor::load(MNIST_PATH + "test_x.npy");
+    auto test_y     = Tensor::load(MNIST_PATH + "test_y.npy");
 
     train_x.constant = true;
     train_y.constant = true;
 
+    validate_x.constant = true;
+    validate_y.constant = true;
+
     test_x.constant = true;
     test_y.constant = true;
-    return std::make_tuple(train_x, train_y, test_x, test_y);
+
+    return {train_x,    train_y,
+            validate_x, validate_y,
+            test_x,     test_y};
 }
 
 
@@ -180,27 +177,42 @@ int main (int argc, char *argv[]) {
 #endif
 
     utils::random::set_seed(123123);
-    const int batch_size = 512;
+    const int batch_size = 64;
 
-    use_cudnn = false;
+    use_cudnn = FLAGS_use_cudnn;
 
-    Tensor train_x, train_y, test_x, test_y;
-    std::tie(train_x, train_y, test_x, test_y) = load_dataset();
+    auto ds = load_dataset();
+    Tensor train_x    = ds[0], train_y    = ds[1],
+           validate_x = ds[2], validate_y = ds[3],
+           test_x     = ds[4], test_y     = ds[5];
 
     MnistCnn model;
 
     auto params = model.parameters();
-    auto solver = solver::construct("adam", params, 0.0001);
+    auto solver = solver::construct("sgd", params, 0.01);
+    solver->clip_norm = 0.0;
+    solver->clip_abs  = 0.0;
 
-    for (int i = 0; i < 200; ++i) {
+    PerformanceReport report;
+
+    for (int i = 0; i < 2; ++i) {
         auto epoch_start_time = std::chrono::system_clock::now();
+
+        report.start_capture();
         auto epoch_error      = training_epoch(model, solver, train_x, train_y, batch_size);
+        report.stop_capture();
+        report.print();
+
         std::chrono::duration<double> epoch_duration
                 = (std::chrono::system_clock::now() - epoch_start_time);
-        auto test_acc  = accuracy(model, test_x, test_y, batch_size);
+        auto validate_acc  = accuracy(model, validate_x, validate_y, batch_size);
 
-        std::cout << "Epoch " << i << ", train: " << epoch_error
-                                   << ", test: "  << 100.0 * test_acc << '%'
-                                   << ", time: " << epoch_duration.count() << "s" << std::endl;
+        std::cout << "Epoch " << i
+                  << ", train:    " << epoch_error
+                  << ", valodate: " << 100.0 * validate_acc << '%'
+                  << ", time:     " << epoch_duration.count() << "s" << std::endl;
     }
+
+    auto test_acc  = accuracy(model, test_x, test_y, batch_size);
+    std::cout << "Test accuracy: " << 100.0 * test_acc << '%' << std::endl;
 }
