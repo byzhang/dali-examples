@@ -10,14 +10,10 @@
 #include "utils.h"
 
 DEFINE_bool(use_cudnn, true, "Whether to use cudnn library for some GPU operations.");
-
+DEFINE_string(path, "/home/sidor/tmp/mnist/", "Location of mnist data");
 
 using std::vector;
 using std::string;
-
-const std::string MNIST_PATH = "/home/sidor/tmp/mnist/";
-
-
 
 /* Simple convnet to learn MNIST digit recognition
  *
@@ -131,15 +127,15 @@ double training_epoch(const MnistCnn& model,
 }
 
 
-std::vector<Tensor> load_dataset() {
-    auto train_x    = Tensor::load(MNIST_PATH + "train_x.npy");
-    auto train_y    = Tensor::load(MNIST_PATH + "train_y.npy");
+std::vector<Tensor> load_dataset(const std::string& path) {
+    auto train_x    = Tensor::load(utils::dir_join({path, "train_x.npy"}));
+    auto train_y    = Tensor::load(utils::dir_join({path, "train_y.npy"}));
 
-    auto validate_x = Tensor::load(MNIST_PATH + "validate_x.npy");
-    auto validate_y = Tensor::load(MNIST_PATH + "validate_y.npy");
+    auto validate_x = Tensor::load(utils::dir_join({path, "validate_x.npy"}));
+    auto validate_y = Tensor::load(utils::dir_join({path, "validate_y.npy"}));
 
-    auto test_x     = Tensor::load(MNIST_PATH + "test_x.npy");
-    auto test_y     = Tensor::load(MNIST_PATH + "test_y.npy");
+    auto test_x     = Tensor::load(utils::dir_join({path, "test_x.npy"}));
+    auto test_y     = Tensor::load(utils::dir_join({path, "test_y.npy"}));
 
     train_x.constant = true;
     train_y.constant = true;
@@ -181,7 +177,7 @@ int main (int argc, char *argv[]) {
 
     use_cudnn = FLAGS_use_cudnn;
 
-    auto ds = load_dataset();
+    auto ds = load_dataset(FLAGS_path);
     Tensor train_x    = ds[0], train_y    = ds[1],
            validate_x = ds[2], validate_y = ds[3],
            test_x     = ds[4], test_y     = ds[5];

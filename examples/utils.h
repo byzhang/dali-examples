@@ -2,6 +2,7 @@
 #define DALI_EXAMPLES_EXAMPLES_UTILS_H
 
 #include <dali/utils/core_utils.h>
+#include <dali/utils/gzstream.h>
 #include <gflags/gflags.h>
 #include <string>
 #include <vector>
