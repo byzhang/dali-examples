@@ -15,24 +15,6 @@ DEFINE_string(path, "/home/sidor/tmp/mnist/", "Location of mnist data");
 using std::vector;
 using std::string;
 
-/* Simple convnet to learn MNIST digit recognition
- *
- * MNIST_PATH must point a directory containing
- * two files:
- *    - mnistX.npy - mnist images in form of
- *                   (70000, 784) tensor of floats
- *                   with values between 0 and 1
- *    - mnistY.npy - mnist labels corresponding
- *                   this those images represented
- *                   as an int array of shape
- *                   (70000,)
- */
-
-Tensor shitty_softmax(Tensor x) {
-    auto expted = x.exp();
-    return expted / expted.sum(1)[Slice()][Broadcast()];
-}
-
 struct MnistCnn {
     ConvLayer conv1;
     ConvLayer conv2;
@@ -115,7 +97,7 @@ double training_epoch(const MnistCnn& model,
 
         Tensor probs = model.activate(batch_images, 0.5);
 
-        Tensor error = tensor_ops::cross_entropy(shitty_softmax(probs), batch_labels);
+        Tensor error = tensor_ops::softmax_cross_entropy(probs, batch_labels);
         error.grad();
         epoch_error += (double)(Array)error.w.sum();
 
