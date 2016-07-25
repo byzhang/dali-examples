@@ -70,7 +70,13 @@ double accuracy(const MnistCnn& model, Tensor images, Tensor labels, int batch_s
         Slice batch_slice(batch_start, std::min(batch_start + batch_size, num_images));
         auto probs = model.activate(images[batch_slice], 1.0);
         Array predictions = op::astype(op::argmax(probs.w, -1), DTYPE_INT32);
-        Array correct     = op::astype(op::argmax(labels.w[batch_slice], -1), DTYPE_INT32);
+
+        Array correct;
+        if (labels.dtype() == DTYPE_INT32) {
+            correct = labels.w[batch_slice];
+        } else {
+            correct = op::astype(op::argmax(labels.w[batch_slice], -1), DTYPE_INT32);
+        }
         num_correct += op::sum(op::equals(predictions, correct));
     }
     return (Array)(num_correct.astype(DTYPE_DOUBLE) / num_images);
@@ -186,9 +192,9 @@ int main (int argc, char *argv[]) {
         auto validate_acc  = accuracy(model, validate_x, validate_y, batch_size);
 
         std::cout << "Epoch " << i
-                  << ", train:    " << epoch_error
-                  << ", valodate: " << 100.0 * validate_acc << '%'
-                  << ", time:     " << epoch_duration.count() << "s" << std::endl;
+                  << ", train:      " << epoch_error
+                  << ", validation: " << 100.0 * validate_acc << '%'
+                  << ", time:       " << epoch_duration.count() << "s" << std::endl;
     }
 
     auto test_acc  = accuracy(model, test_x, test_y, batch_size);
