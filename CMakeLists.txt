@@ -13,6 +13,8 @@ endif()
 
 # find Dali.
 find_package(Dali REQUIRED)
+# message(STATUS "include ${DALI_AND_DEPS_INCLUDE_DIRS}")
+# include_directories(${DALI_AND_DEPS_INCLUDE_DIRS} $ENV{DALI_HOME})
 include_directories(${DALI_AND_DEPS_INCLUDE_DIRS})
 
 # find gflags
