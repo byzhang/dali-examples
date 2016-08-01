@@ -12,8 +12,11 @@ message("CMAKE_MODULE_PATH " ${CMAKE_MODULE_PATH})
 message("CMAKE_PREFIX_PATH " ${CMAKE_PREFIX_PATH})
 
 # find Dali.
+if (DEFINED ENV{DALI_HOME} AND NOT "$ENV{DALI_HOME}" STREQUAL "")
+    set(Dali_DIR $ENV{DALI_HOME}/cmake)
+endif()
 find_package(Dali REQUIRED)
-include_directories(${DALI_AND_DEPS_INCLUDE_DIRS})
+include_directories(${DALI_AND_DEPS_INCLUDE_DIRS} $ENV{DALI_HOME})
 
 # find gflags
 find_package(Gflags REQUIRED)
