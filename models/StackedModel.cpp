@@ -154,9 +154,9 @@ Mat<Z> StackedModel<Z>::decode(
 
 template<typename Z>
 Mat<Z> StackedModel<Z>::masked_predict_cost(
-        Mat<int> data,
-        Mat<int> target_data,
-        Mat<Z> mask,
+        const Mat<int>& data,
+        const Mat<int>& target_data,
+        const Mat<Z>& mask,
         Z drop_prob,
         int temporal_offset,
         uint softmax_offset) const {

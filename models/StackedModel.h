@@ -147,9 +147,9 @@ class StackedModel : public RecurrentEmbeddingModel<Z>, public ReconstructModel 
         **/
         StackedModel(const StackedModel<Z>&, bool, bool);
 
-        Mat<Z> masked_predict_cost(Mat<int> data,
-                                   Mat<int> target_data,
-                                   Mat<Z> prediction_mask,
+        Mat<Z> masked_predict_cost(const Mat<int>& data,
+                                   const Mat<int>& target_data,
+                                   const Mat<Z>& prediction_mask,
                                    Z drop_prob = 0.0,
                                    int temporal_offset = 0,
                                    uint softmax_offset = 0) const;

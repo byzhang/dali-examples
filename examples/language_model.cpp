@@ -157,14 +157,13 @@ REAL_t average_error(model_t& model, const vector<LanguageBatch<R>>& dataset) {
     for (size_t i = 0; i < dataset.size();i++)
         full_code_size += dataset[i].total_codes;
 
+    // TODO: use openmp to properly handle FLAGS_j.
+    // Right now, force it to run sequentially as the original pool increase the
+    // copy of batch.w() from 1 to 13.
     for (size_t batch_id = 0; batch_id < dataset.size(); ++batch_id) {
-        pool->run([&costs, &dataset, &model, batch_id]() {
-            costs[ThreadPool::get_thread_number()] +=
+            costs[0] +=
                     model.masked_predict_cost(dataset[batch_id], 0.0, 1).sum().w(0);
-
-        });
     }
-    pool->wait_until_idle();
 
     return utils::vsum(costs) / full_code_size;
 }
