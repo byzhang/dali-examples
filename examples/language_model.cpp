@@ -257,17 +257,11 @@ int main( int argc, char* argv[]) {
 
     utils::Vocab      word_vocab;
     vector<LanguageBatch<REAL_t>> training;
-    vector<LanguageBatch<REAL_t>> validation;
 
     Timer dl_timer("Dataset loading");
     std::tie(word_vocab, training) = load_dataset_and_vocabulary<REAL_t>(
         FLAGS_train,
         FLAGS_min_occurence,
-        FLAGS_minibatch);
-
-    validation = load_dataset_with_vocabulary<REAL_t>(
-        FLAGS_validation,
-        word_vocab,
         FLAGS_minibatch);
     dl_timer.stop();
 
@@ -416,6 +410,12 @@ int main( int argc, char* argv[]) {
 
         pool->wait_until_idle();
         journalist.done();
+
+        vector<LanguageBatch<REAL_t>> validation;
+        validation = load_dataset_with_vocabulary<REAL_t>(
+            FLAGS_validation,
+            word_vocab,
+            FLAGS_minibatch);
 
         new_cost = average_error(model, validation);
         if (new_cost >= cost) {

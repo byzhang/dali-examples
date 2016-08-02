@@ -2,7 +2,7 @@
 --input_size=128
 # using GPU, j=1 to avoid hang.
 --j=1
---patience=20
+--patience=3
 --shortcut
 --stack_size=2
 # use PTB
@@ -18,6 +18,7 @@
 # less chatty
 --noshow_reconstructions
 --learing_rate=0.01
+--max_sentence_length=32
 --save=ptb.model
 # need to change load dir to the latest one
---load=ptb.model_0
+#--load=ptb.model_0
