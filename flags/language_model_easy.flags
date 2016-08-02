@@ -1,7 +1,7 @@
 --epochs=2000
 --input_size=128
-# using GPU, 4CPU is enough to drive the load
---j=4
+# using GPU, j=1 to avoid hang.
+--j=1
 --patience=20
 --shortcut
 --stack_size=2
