@@ -256,14 +256,14 @@ int main( int argc, char* argv[]) {
     utils::update_device(FLAGS_device);
 
     utils::Vocab      word_vocab;
+    {
     vector<LanguageBatch<REAL_t>> training;
 
-    Timer dl_timer("Dataset loading");
     std::tie(word_vocab, training) = load_dataset_and_vocabulary<REAL_t>(
         FLAGS_train,
         FLAGS_min_occurence,
         FLAGS_minibatch);
-    dl_timer.stop();
+    }
 
     std::cout << "    Vocabulary size = " << word_vocab.size() << " (occuring more than " << FLAGS_min_occurence << ")" << std::endl
               << "Max training epochs = " << FLAGS_epochs           << std::endl
@@ -316,6 +316,20 @@ int main( int argc, char* argv[]) {
 
     while (cost > FLAGS_cutoff && epoch < FLAGS_epochs && patience < FLAGS_patience) {
         std::atomic<int> full_code_size(0);
+
+        Timer dl_timer("Dataset loading");
+        vector<LanguageBatch<REAL_t>> training;
+        training = load_dataset_with_vocabulary<REAL_t>(
+            FLAGS_train,
+            word_vocab,
+            FLAGS_minibatch);
+        vector<LanguageBatch<REAL_t>> validation;
+        validation = load_dataset_with_vocabulary<REAL_t>(
+            FLAGS_validation,
+            word_vocab,
+            FLAGS_minibatch);
+        dl_timer.stop();
+
         auto random_batch_order = utils::random_arange(training.size());
 
         std::atomic<int> batches_processed(0);
@@ -410,12 +424,6 @@ int main( int argc, char* argv[]) {
 
         pool->wait_until_idle();
         journalist.done();
-
-        vector<LanguageBatch<REAL_t>> validation;
-        validation = load_dataset_with_vocabulary<REAL_t>(
-            FLAGS_validation,
-            word_vocab,
-            FLAGS_minibatch);
 
         new_cost = average_error(model, validation);
         if (new_cost >= cost) {
