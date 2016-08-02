@@ -1,8 +1,23 @@
 --epochs=2000
---input_size=100
---j=9
+--input_size=128
+# using GPU, 4CPU is enough to drive the load
+--j=4
 --patience=20
 --shortcut
 --stack_size=2
---train=../data/paul_graham/train.txt
---validation=../data/paul_graham/validation.txt
+# use PTB
+--train=/ssd/ptb/train.txt
+--validation=/ssd/ptb/valid.txt
+# default is adadelta, very bad
+--solver=adagrad
+# the real GPU is specified by CUDA_VISIBLE_DEVICES
+--device=0
+# PTB has done the occurence filtering
+--min_occurence=1
+--show_wps
+# less chatty
+--noshow_reconstructions
+--learing_rate=0.01
+--save=ptb.model
+# need to change load dir to the latest one
+--load=ptb.model_0
